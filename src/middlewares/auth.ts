@@ -9,7 +9,6 @@ export const withAuth: RequestHandler = async (
   next: NextFunction
 ) => {
   const token = request.cookies?.token;
-  console.log("Token: ", token);
   if (!token) {
     return response
       .status(401)

@@ -19,7 +19,7 @@ import { attendanceRouter } from "./routes/attendance-router";
 
 const app: Application = express();
 
-app.use(cors());
+app.use(cors({ credentials: true, origin: process.env.APP_URL }));
 
 app.use(logger("dev"));
 app.use(express.json());

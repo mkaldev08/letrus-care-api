@@ -26,20 +26,42 @@ export const loginAccount = async (request: Request, response: Response) => {
     if (!user) {
       response.status(401).json({ error: "Verifica o username" });
     } else {
-      //Verifica a senha e gera um token de 14 dias
       const same = await isCorrectPassword(password, user.password);
       if (!same) {
         response.status(401).json({ error: "Verifica a senha" });
       } else {
-        //ToDo Pegar na variável de ambiente
         const secret = process.env.JWT_TOKEN;
         if (!secret) {
           return;
         }
         const token = jwt.sign(username, secret);
-        response.status(200).json({ user, token });
+
+        response.cookie("token", token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "strict",
+        });
+
+        response.status(200).json(user);
       }
     }
+  } catch (error) {
+    console.log(error);
+    response
+      .status(500)
+      .json({ error: "Internal error, please try again", code: error });
+  }
+};
+
+export const userLogout = (request: Request, response: Response) => {
+  try {
+    response.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    response.status(204).json(null);
   } catch (error) {
     console.log(error);
     response

@@ -39,7 +39,7 @@ export const loginAccount = async (request: Request, response: Response) => {
         response.cookie("token", token, {
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
-          sameSite: "strict",
+          sameSite: "none",
         });
 
         response.status(200).json(user);
@@ -58,7 +58,7 @@ export const userLogout = (request: Request, response: Response) => {
     response.clearCookie("token", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: "none",
     });
 
     response.status(204).json(null);

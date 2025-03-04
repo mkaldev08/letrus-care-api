@@ -36,7 +36,7 @@ export const loginAccount = async (request: Request, response: Response) => {
         }
         const token = jwt.sign(username, secret);
 
-        response.cookie("token", token, {
+        response.cookie("x-token", token, {
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
           sameSite: "strict",
@@ -55,7 +55,7 @@ export const loginAccount = async (request: Request, response: Response) => {
 
 export const userLogout = (request: Request, response: Response) => {
   try {
-    response.clearCookie("token", {
+    response.clearCookie("x-token", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",

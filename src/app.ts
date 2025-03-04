@@ -6,7 +6,6 @@ import "./config/database";
 
 import { withAuth } from "./middlewares/auth";
 
-import { centerRouter } from "../src/routes/center-router";
 import { userRouter } from "./routes/user-router";
 import { studentRouter } from "./routes/student-router";
 import { courseRouter } from "./routes/course-router";
@@ -16,6 +15,7 @@ import { paymentRouter } from "./routes/payment-router";
 import { classRouter } from "./routes/class-router";
 import { teacherRouter } from "./routes/teacher-router";
 import { attendanceRouter } from "./routes/attendance-router";
+import { centerRouter } from "./routes/center-router";
 
 const app: Application = express();
 

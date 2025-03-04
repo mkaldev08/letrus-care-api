@@ -2,6 +2,9 @@ import express, { Application } from "express";
 import cookieParser from "cookie-parser";
 import logger from "morgan";
 import cors from "cors";
+import swaggerUi from "swagger-ui-express";
+import swaggerJsdoc from "swagger-jsdoc";
+
 import "./config/database";
 
 import { withAuth } from "./middlewares/auth";
@@ -25,6 +28,40 @@ app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+
+const options = {
+  failOnErrors: true, // 500
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "Letrus Care API",
+      description: "API for Letrus Care",
+      version: "0.1.0",
+    },
+    license: {
+      name: "MIT",
+      url: "https://github.com/manuelkalueka/letrus-care-api/blob/master/LICENSE",
+    },
+    contact: {
+      name: "Manuel Kalueka",
+      url: "https://github.com/manuelkalueka",
+    },
+    security: {
+      cookieAuth: [
+        {
+          type: "apiKey",
+          name:"token",
+          in: "cookie",
+        },
+      ],
+    },
+  },
+  apis: ["./routes/*.ts"],
+};
+
+const openapiSpecification = swaggerJsdoc(options);
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openapiSpecification));
 
 app.use("/users", userRouter);
 app.use("/centers", withAuth, centerRouter);

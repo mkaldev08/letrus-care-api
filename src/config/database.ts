@@ -9,7 +9,5 @@ main()
   .catch((error) => console.error("Erro ao conectar ao MongoDB:", error));
 
 async function main(): Promise<void> {
-  await mongoose.connect(
-    `${process.env.CONNECTION_STRING}${process.env.DB_NAME}`
-  );
+  await mongoose.connect(`${process.env.MONGO_URL}`);
 }

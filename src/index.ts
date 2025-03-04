@@ -11,7 +11,7 @@ app.set("port", port);
 const server = http.createServer(app);
 
 server.listen(port, () =>
-  console.log(`PID: ${process.pid} running at http://localhost:${port}`)
+  console.log(`PID: ${process.pid} running on port ${port}`)
 );
 
 server.on("error", onError);

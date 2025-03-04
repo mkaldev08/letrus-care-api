@@ -34,7 +34,7 @@ export const loginAccount = async (request: Request, response: Response) => {
         if (!secret) {
           return;
         }
-        const token = jwt.sign(username, secret);
+        const token = jwt.sign({ username }, secret, { expiresIn: "1h" });
 
         response.cookie("token", token, {
           httpOnly: true,

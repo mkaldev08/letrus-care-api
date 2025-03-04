@@ -21,6 +21,11 @@ export const withAuth: RequestHandler = async (
   }
 
   try {
+    type decodedType = {
+      username: string;
+      iat: number;
+      exp: number;
+    };
     const decoded = jwt.verify(token, secret);
     if (!decoded) {
       console.error("Token verification error");
@@ -29,7 +34,7 @@ export const withAuth: RequestHandler = async (
         .json({ error: "Unauthorized: Token Invalid!" });
     }
 
-    const user = await UserModel.findOne({ username: decoded });
+    const user = await UserModel.findOne({ username: (decoded as decodedType)?.username });
 
     if (!user) {
       return response

@@ -18,16 +18,6 @@ export const createUser = async (request: Request, response: Response) => {
   }
 };
 
-const cookieOptions: {
-  httpOnly: boolean;
-  secure: boolean;
-  sameSite: "none" | "lax" | "strict" | boolean;
-} = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "none",
-};
-
 export const loginAccount = async (request: Request, response: Response) => {
   const { username, password } = request.body;
   try {
@@ -46,7 +36,11 @@ export const loginAccount = async (request: Request, response: Response) => {
         }
         const token = jwt.sign({ username }, secret, { expiresIn: "1h" });
 
-        response.cookie("token", token, cookieOptions);
+        response.cookie("token", token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: false,
+        });
 
         response.status(200).json(user);
       }
@@ -61,7 +55,11 @@ export const loginAccount = async (request: Request, response: Response) => {
 
 export const userLogout = (request: Request, response: Response) => {
   try {
-    response.clearCookie("token", cookieOptions);
+    response.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: false,
+    });
 
     response.status(204).json(null);
   } catch (error) {

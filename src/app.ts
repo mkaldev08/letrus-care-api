@@ -2,6 +2,7 @@ import express, { Application } from "express";
 import cookieParser from "cookie-parser";
 import logger from "morgan";
 import cors from "cors";
+import helmet from "helmet";
 import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
 
@@ -22,12 +23,14 @@ import { centerRouter } from "./routes/center-router";
 
 const app: Application = express();
 
+app.use(helmet());
 app.use(cors({ credentials: true, origin: process.env.APP_URL }));
 
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.disable("x-powered-by");
 
 const options = {
   failOnErrors: true, // 500
@@ -50,7 +53,7 @@ const options = {
       cookieAuth: [
         {
           type: "apiKey",
-          name:"token",
+          name: "token",
           in: "cookie",
         },
       ],

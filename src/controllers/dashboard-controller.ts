@@ -7,7 +7,7 @@ import { AttendanceModel } from "../models/attendance-model";
 import mongoose from "mongoose";
 
 type StudentGrowth = { month: string; students: number }[];
-type PaymentGrowthTopFive = { month: string; totalAmount: number }[];
+type PaymentGrowthTopFive = { month: string; totalAmount: string }[];
 
 export const getDashboard = async (request: Request, response: Response) => {
   const { centerId } = request.params;
@@ -133,6 +133,17 @@ export const getDashboard = async (request: Request, response: Response) => {
         { $sort: { _id: 1 } }, // Sort by month in ascending order
         { $project: { month: "$_id", totalAmount: 1, _id: 0 } },
       ]);
+
+    // const formatCurrency = (amount: number) => {
+    //   return new Intl.NumberFormat("pt", {
+    //     style: "currency",
+    //     currency: "AOA",
+    //   }).format(amount);
+    // };
+
+    // paymentGrowthTopFive.forEach((payment) => {
+    //   payment.totalAmount = formatCurrency(Number(payment.totalAmount));
+    // });
 
     return response.json({
       totalActiveClassRoom,

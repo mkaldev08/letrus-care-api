@@ -61,20 +61,35 @@ export const getDashboard = async (request: Request, response: Response) => {
     const startDate = new Date(today.getFullYear(), today.getMonth() - 4, 1);
     const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
+    // Student growth in the last 5 months (including the current month)
     const studentGrowth: StudentGrowth = await EnrollmentModel.aggregate([
-      { $match: { centerId, status: { $ne: "dropped" }, enrollmentDate: { $gte: startDate, $lte: endDate } } },
-      { $group: { _id: { $month: "$enrollmentDate" }, students: { $sum: 1 } } },
-      { $sort: { "_id": 1 } },
-      { $project: { month: "$_id", students: 1, _id: 0 } }
+      {
+        $match: {
+          centerId,
+          status: { $ne: "dropped" },
+          enrollmentDate: { $gte: startDate, $lte: endDate }, // Filter by date range
+        },
+      },
+      { $group: { _id: { $month: "$enrollmentDate" }, students: { $sum: 1 } } }, // Group by month
+      { $sort: { _id: 1 } }, // Sort by month in ascending order
+      { $project: { month: "$_id", students: 1, _id: 0 } }, // Project the month and students
     ]);
 
-    const paymentGrowthTopFive: PaymentGrowthTopFive = await PaymentModel.aggregate([
-      { $match: { centerId, status: { $eq: "paid" }, paymentDate: { $gte: startDate, $lte: endDate } } },
-      { $group: { _id: { $month: "$paymentDate" }, amount: { $sum: "$amount" } } },
-      { $sort: { amount: -1 } },
-      { $limit: 5 },
-      { $project: { month: "$_id", amount: 1, _id: 0 } }
-    ]);
+    // Payment growth in the last 5 months (including the current month)
+    const paymentGrowthTopFive: PaymentGrowthTopFive =
+      await PaymentModel.aggregate([
+        {
+          $match: {
+            centerId,
+            status: { $eq: "paid" },
+            paymentDate: { $gte: startDate, $lte: endDate },
+          },
+        }, // Filter paid payments
+        // Group by month
+        { $sort: { _id: 1 } }, // Sort by month in ascending order
+        { $limit: 5 }, // Get the top 5 months
+        { $project: { month: "$_id", amount: 1, _id: 0 } },
+      ]);
 
     return response.json({
       totalActiveClassRoom,

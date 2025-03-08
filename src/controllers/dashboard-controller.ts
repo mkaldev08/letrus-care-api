@@ -4,9 +4,10 @@ import { EnrollmentModel } from "../models/enrollment-model";
 import { PaymentModel } from "../models/payment-model";
 import { TeacherModel } from "../models/teacher-model";
 import { AttendanceModel } from "../models/attendance-model";
+import mongoose from "mongoose";
 
 type StudentGrowth = { month: string; students: number }[];
-type PaymentGrowthTopFive = { month: string; amount: number }[];
+type PaymentGrowthTopFive = { month: string; totalAmount: number }[];
 
 export const getDashboard = async (request: Request, response: Response) => {
   const { centerId } = request.params;
@@ -31,6 +32,14 @@ export const getDashboard = async (request: Request, response: Response) => {
     return { startOfDay, endOfDay };
   };
 
+  const getLastFiveMonthsRange = (date: Date) => {
+    const endDate = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    const startDate = new Date(date.getFullYear(), date.getMonth() - 4, 1);
+    return { startDate, endDate };
+  };
+
+  const { startDate, endDate } = getLastFiveMonthsRange(today);
+
   const { startOfDay, endOfDay } = normalizeDateRange(today);
   try {
     const totalActiveClassRoom = await ClassModel.countDocuments({
@@ -50,7 +59,8 @@ export const getDashboard = async (request: Request, response: Response) => {
 
     const totalOverdueFee = await PaymentModel.countDocuments({
       centerId,
-      status: { $eq: "overdue" },
+      // status: { $eq: "overdue" },
+      dueDate: { $lt: endOfDay },
     });
 
     const totalActiveTeachers = await TeacherModel.countDocuments({
@@ -77,7 +87,6 @@ export const getDashboard = async (request: Request, response: Response) => {
 
     const totalDailyAbsent = classIds.length
       ? await AttendanceModel.countDocuments({
-          centerId,
           classId: { $in: classIds },
           status: "absent",
           date: { $gte: startOfDay, $lt: endOfDay },
@@ -85,32 +94,44 @@ export const getDashboard = async (request: Request, response: Response) => {
       : 0;
 
     // Student growth in the last 5 months (including the current month)
+
     const studentGrowth: StudentGrowth = await EnrollmentModel.aggregate([
       {
         $match: {
-          centerId,
+          centerId: new mongoose.Types.ObjectId(centerId),
           status: { $ne: "dropped" },
-          enrollmentDate: { $gte: startOfDay, $lte: endOfDay }, // Filter by date range
+          enrollmentDate: { $gte: startDate, $lte: endDate }, // Filter by date range
         },
       },
-      { $group: { _id: { $month: "$enrollmentDate" }, students: { $sum: 1 } } }, // Group by month
-      { $sort: { _id: 1 } }, // Sort by month in ascending order
-      { $project: { month: "$_id", students: 1, _id: 0 } }, // Project the month and students
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m", date: "$enrollmentDate" } },
+          students: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+      { $project: { month: "$_id", students: 1, _id: 0 } }, // select the month and students
     ]);
     // Payment growth in the last 5 months (including the current month)
     const paymentGrowthTopFive: PaymentGrowthTopFive =
       await PaymentModel.aggregate([
         {
           $match: {
-            centerId,
+            centerId: new mongoose.Types.ObjectId(centerId),
             status: { $eq: "paid" },
-            paymentDate: { $gte: startOfDay, $lte: endOfDay },
+            paymentDate: { $gte: startDate, $lte: endDate },
           },
-        }, // Filter paid payments
-        // Group by month
+        },
+        {
+          $group: {
+            _id: {
+              $dateToString: { format: "%Y-%m", date: "$paymentDate" },
+            },
+            totalAmount: { $sum: "$amount" },
+          },
+        }, // Group by month
         { $sort: { _id: 1 } }, // Sort by month in ascending order
-        { $limit: 5 }, // Get the top 5 months
-        { $project: { month: "$_id", amount: 1, _id: 0 } },
+        { $project: { month: "$_id", totalAmount: 1, _id: 0 } },
       ]);
 
     return response.json({

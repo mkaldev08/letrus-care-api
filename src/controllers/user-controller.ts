@@ -25,7 +25,7 @@ const cookieOptions: {
 } = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
-  sameSite: "strict",
+  sameSite: process.env.SAME_SITE as "strict" | "lax" | "none" | undefined,
 };
 
 export const loginAccount = async (request: Request, response: Response) => {

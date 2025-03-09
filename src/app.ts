@@ -19,6 +19,7 @@ import { classRouter } from "./routes/class-router";
 import { teacherRouter } from "./routes/teacher-router";
 import { attendanceRouter } from "./routes/attendance-router";
 import { centerRouter } from "./routes/center-router";
+import { dashboardRouter } from "./routes/dashboard-router";
 
 const app: Application = express();
 
@@ -74,5 +75,6 @@ app.use("/payments", withAuth, paymentRouter);
 app.use("/classes", withAuth, classRouter);
 app.use("/teachers", withAuth, teacherRouter);
 app.use("/attendances", withAuth, attendanceRouter);
+app.use("/dashboard", withAuth, dashboardRouter);
 
 export default app;

@@ -24,7 +24,7 @@ const cookieOptions: {
   sameSite: "strict" | "lax" | "none" | undefined | boolean;
 } = {
   httpOnly: true,
-  secure: process.env.NODE_ENV !== "development",// true if in production
+  secure: Boolean(process.env.SECURE_ON_COOKIE as string), // true if in production
   sameSite: process.env.SAME_SITE as "strict" | "lax" | "none" | undefined,
 };
 

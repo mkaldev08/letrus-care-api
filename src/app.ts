@@ -20,6 +20,7 @@ import { teacherRouter } from "./routes/teacher-router";
 import { attendanceRouter } from "./routes/attendance-router";
 import { centerRouter } from "./routes/center-router";
 import { dashboardRouter } from "./routes/dashboard-router";
+import {healthCheckRouter} from "./routes/health-check-router";
 
 const app: Application = express();
 

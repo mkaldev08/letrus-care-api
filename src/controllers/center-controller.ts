@@ -1,7 +1,38 @@
 import { Request, Response } from "express";
 import { CenterModel, ICenter } from "../models/center-model";
+import { CourseModel } from "../models/course-model";
+import { GradeModel } from "../models/grade-model";
 
 export const createCenter = async (request: Request, response: Response) => {
+  const defaultCourses = [
+    {
+      name: "Alfabetização",
+      description: "Curso de alfabetização",
+      startDate: new Date(),
+      endDate: new Date(),
+      fee: 2500,
+      feeFine: 500,
+    },
+    {
+      name: "Caligrafia",
+      description: "Curso de caligrafia",
+      startDate: new Date(),
+      endDate: new Date(),
+      fee: 3500,
+      feeFine: 500,
+    },
+    {
+      name: "Inglês",
+      description: "Curso de inglês básico",
+      startDate: new Date(),
+      endDate: new Date(),
+      fee: 2000,
+      feeFine: 500,
+    },
+  ];
+
+  const defaultGrades = [{ grade: "Nível 1" }, { grade: "Nível 2" }];
+
   const {
     name,
     address,
@@ -23,6 +54,18 @@ export const createCenter = async (request: Request, response: Response) => {
       createdBy,
       year_school,
     });
+
+    const coursesWithCenter = defaultCourses.map((course) => ({
+      ...course,
+      centerId: center._id,
+    }));
+    await CourseModel.insertMany(coursesWithCenter);
+
+    const gradesWithCenter = defaultGrades.map((grade) => ({
+      ...grade,
+      centerId: center._id,
+    }));
+    await GradeModel.insertMany(gradesWithCenter);
 
     await center.save();
     response.status(201).json(center);

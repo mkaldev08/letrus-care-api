@@ -7,7 +7,7 @@ export interface ICourse extends Document {
   endDate: Date;
   fee: number;
   feeFine: number;
-  enrollmentFee:number
+  enrollmentFee: number;
   centerId: Schema.Types.ObjectId;
   status: "active" | "inactive";
   courseType: "on_home" | "on_center";

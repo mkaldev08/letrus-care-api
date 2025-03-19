@@ -79,13 +79,14 @@ export const getClass = async (request: Request, response: Response) => {
 export const editClass = async (request: Request, response: Response) => {
   const { id } = request.params;
 
-  const { period, teachers, classLimit, schedule ,className} = request.body;
+  const { period, teachers, classLimit, schedule, className } = request.body;
   try {
     const classInCenter = await ClassModel.findOneAndUpdate(
       { _id: id },
       {
         $set: {
-          period,className,
+          period,
+          className,
           teachers,
           classLimit,
           schedule,
@@ -110,10 +111,15 @@ export const addStudentsOnClass = async (
   const { studentId } = request.body;
   try {
     const classInCenter = await ClassModel.findById(id);
-    if (!classInCenter)
-      return response.status(404).json({ message: "turma não encontrada" });
-    if (classInCenter.students.length >= classInCenter.classLimit)
-      return response.status(400).json({ message: "Limite da Turma Excedido" });
+    if (!classInCenter) {
+      response.status(404).json({ message: "turma não encontrada" });
+      return;
+    }
+
+    if (classInCenter.students.length >= classInCenter.classLimit) {
+      response.status(400).json({ message: "Limite da Turma Excedido" });
+      return;
+    }
 
     classInCenter.students.push(studentId);
 
@@ -133,7 +139,8 @@ export const updateClassStatus = async (
   const { status } = request.body;
   //Verifica o status enviado
   if (!["active", "inactive"].includes(status)) {
-    return response.status(400).json({ error: "Status inválido" });
+    response.status(400).json({ error: "Status inválido" });
+    return;
   }
 
   try {
@@ -144,7 +151,8 @@ export const updateClassStatus = async (
     );
 
     if (!classInCenter) {
-      return response.status(404).json({ error: "Turma não encontrada" });
+      response.status(404).json({ error: "Turma não encontrada" });
+      return;
     }
 
     response.status(200).json(classInCenter);

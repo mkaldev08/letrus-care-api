@@ -65,9 +65,10 @@ export const searchStudent = async (request: Request, response: Response) => {
   try {
     // Garantir que o valor de query seja uma string
     if (typeof query !== "string") {
-      return response
+      response
         .status(400)
         .json({ message: "Query string precisa ser string." });
+      return;
     }
 
     const results = await StudentModel.find({
@@ -76,15 +77,13 @@ export const searchStudent = async (request: Request, response: Response) => {
     });
 
     if (results) {
-      return response.status(200).json(results);
+      response.status(200).json(results);
     } else {
-      return response
-        .status(404)
-        .json({ message: "nenhum Estudante encontrado." });
+      response.status(404).json({ message: "nenhum Estudante encontrado." });
     }
   } catch (error) {
     // Tratar qualquer erro que ocorrer durante a busca
-    return response.status(500).json({ message: "Server error", error });
+    response.status(500).json({ message: "Server error", error });
   }
 };
 

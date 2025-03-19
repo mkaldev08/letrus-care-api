@@ -20,7 +20,8 @@ export const createPayment = async (request: Request, response: Response) => {
 
   // Verificação dos campos obrigatórios
   if (!enrollmentId || !amount || !paymentMonthReference || !centerId) {
-    return response.status(400).json({ error: "Campos obrigatórios faltando" });
+    response.status(400).json({ error: "Campos obrigatórios faltando" });
+    return;
   }
 
   const payment: IPayment = new PaymentModel({
@@ -143,9 +144,7 @@ export const editPayment = async (request: Request, response: Response) => {
   try {
     // Verificação dos campos obrigatórios
     if (!amount || !paymentMonthReference) {
-      return response
-        .status(400)
-        .json({ error: "Campos obrigatórios faltando" });
+      response.status(400).json({ error: "Campos obrigatórios faltando" });
     }
     const payment = await PaymentModel.findOneAndUpdate(
       { _id: id },
@@ -175,7 +174,7 @@ export const updatePaymentStatus = async (
   const { status } = request.body;
   //Verifica o status enviado
   if (!["paid", "pending", "overdue"].includes(status)) {
-    return response.status(400).json({ error: "Status inválido" });
+    response.status(400).json({ error: "Status inválido" });
   }
 
   try {
@@ -186,7 +185,7 @@ export const updatePaymentStatus = async (
     );
 
     if (!payment) {
-      return response.status(404).json({ error: "Pagamento não encontrado" });
+      response.status(404).json({ error: "Pagamento não encontrado" });
     }
 
     response.status(200).json(payment);
@@ -202,9 +201,7 @@ export const searchPayments = async (request: Request, response: Response) => {
     const { query } = request.query;
 
     if (!query) {
-      return response
-        .status(400)
-        .json({ message: "O termo de busca é obrigatório." });
+      response.status(400).json({ message: "O termo de busca é obrigatório." });
     }
 
     // Buscar estudantes com base no $text search
@@ -214,7 +211,7 @@ export const searchPayments = async (request: Request, response: Response) => {
     }).select("_id");
 
     if (students.length === 0) {
-      return response.json([]);
+      response.json([]);
     }
 
     const studentIds = students.map((s) => s._id);

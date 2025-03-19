@@ -145,7 +145,7 @@ export const getDashboard = async (request: Request, response: Response) => {
     //   payment.totalAmount = formatCurrency(Number(payment.totalAmount));
     // });
 
-    return response.json({
+    response.json({
       totalActiveClassRoom,
       totalActiveStudent,
       totalDailyEnrollment,

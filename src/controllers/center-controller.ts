@@ -78,7 +78,7 @@ export const editCenter = async (request: Request, response: Response) => {
     );
 
     if (!centerForUpdate) {
-      return response.status(404).json(null);
+      response.status(404).json(null);
     } else {
       response.status(200).json(centerForUpdate);
     }
@@ -87,12 +87,16 @@ export const editCenter = async (request: Request, response: Response) => {
   }
 };
 
-export const addLogoInCenter = async (request: Request, response: Response) => {
+export const addLogoInCenter = async (
+  request: Request,
+  response: Response
+): Promise<void> => {
   try {
     const { centerId } = request.params;
     // Verifica se o arquivo foi enviado
     if (!request.file) {
-      return response.status(400).json({ message: "Nenhum arquivo enviado" });
+      response.status(400).json({ message: "Nenhum arquivo enviado" });
+      return;
     }
 
     // Converte o buffer do arquivo para Base64
@@ -111,9 +115,10 @@ export const addLogoInCenter = async (request: Request, response: Response) => {
     );
 
     if (!centerForUpdate) {
-      return response
+      response
         .status(404)
         .json({ message: "centro não encontrado", center: null });
+      return;
     }
 
     response.json(centerForUpdate);

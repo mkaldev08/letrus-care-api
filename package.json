@@ -8,8 +8,8 @@
     "email": "pedrokalueca@gmail.com"
   },
   "scripts": {
-    "build": "npx tsc",
-    "start": "npx tsc && node dist/index.js",
+    "build": "tsc",
+    "start": "tsc && node dist/index.js",
     "dev": "nodemon"
   },
   "dependencies": {

@@ -77,5 +77,6 @@ app.use("/classes", withAuth, classRouter);
 app.use("/teachers", withAuth, teacherRouter);
 app.use("/attendances", withAuth, attendanceRouter);
 app.use("/dashboard", withAuth, dashboardRouter);
+app.use("/health-check", healthCheckRouter);
 
 export default app;

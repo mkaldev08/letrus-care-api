@@ -8,7 +8,7 @@
     "email": "pedrokalueca@gmail.com"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "npm i && tsc",
     "start": "tsc && node dist/index.js",
     "dev": "nodemon"
   },

@@ -202,6 +202,7 @@ export const searchPayments = async (request: Request, response: Response) => {
 
     if (!query) {
       response.status(400).json({ message: "O termo de busca é obrigatório." });
+      return
     }
 
     // Buscar estudantes com base no $text search
@@ -212,6 +213,7 @@ export const searchPayments = async (request: Request, response: Response) => {
 
     if (students.length === 0) {
       response.json([]);
+      return
     }
 
     const studentIds = students.map((s) => s._id);

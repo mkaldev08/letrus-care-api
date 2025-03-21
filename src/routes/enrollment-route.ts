@@ -8,10 +8,10 @@ import {
   getStudentsForAddOnClass,
   getEnrollments,
 } from "../controllers/enrollment-controller";
-import { uploadDisk } from "../config/multer";
+import { uploadDiskDocs } from "../config/multer";
 
 export const enrollmentRouter = Router();
-const configUpload = uploadDisk.fields([
+const configUpload = uploadDiskDocs.fields([
   { name: "doc_file", maxCount: 1 },
   { name: "image_file", maxCount: 1 },
 ]);

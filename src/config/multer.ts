@@ -18,6 +18,20 @@ const storageDisk = multer.diskStorage({
   },
 });
 
+const storageDiskDocs = multer.diskStorage({
+  destination: function (req, file, cb) {
+    // Salva os arquivos na pasta "uploads/imgs"
+    cb(null, path.resolve(__dirname, "../uploads/docs"));
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(
+      null,
+      file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname)
+    );
+  },
+});
+
 // Função para filtrar tipos de arquivos (permitir apenas imagens e PDF)
 const fileFilter = (req: any, file: any, cb: any) => {
   const allowedFileTypes = /jpeg|jpg|png|pdf/;
@@ -50,5 +64,10 @@ export const uploadDisk = multer({
 
 export const upload = multer({
   storage,
+  ...fileConfig,
+});
+
+export const uploadDiskDocs = multer({
+  storage: storageDiskDocs,
   ...fileConfig,
 });

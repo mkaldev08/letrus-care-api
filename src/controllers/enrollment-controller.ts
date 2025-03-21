@@ -17,6 +17,8 @@ export const createEnrollment = async (
     userId,
   }: IEnrollment = request.body;
 
+  console.log(request.files);
+
   const enrollment: IEnrollment = new EnrollmentModel({
     studentId,
     courseId,

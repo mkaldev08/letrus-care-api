@@ -88,6 +88,11 @@ export const getStudentsForAddOnClass = async (
     const { centerId } = request.params;
     const { courseId, grade } = request.query;
 
+    if (!courseId || !grade) {
+      response.status(400).json("Precisa enviar a classe e o curso");
+      return;
+    }
+
     const enrollments = await EnrollmentModel.find({
       centerId,
       courseId,

@@ -16,7 +16,7 @@ export interface IStudent extends Document {
 const studentSchema = new Schema<IStudent>({
   name: {
     fullName: { type: String, required: true },
-    surname: { type: String, unique: true },
+    surname: { type: String },
   },
   birthDate: { type: Date, required: true },
   gender: { type: String, enum: ["masculino", "feminino"] },

@@ -2,13 +2,16 @@ import { Request, Response } from "express";
 import { UserModel, IUser } from "../models/user-model";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { sendSMSVerification } from "./otp-controller";
+import { OTPModel } from "../models/otp-model";
 
 export const createUser = async (request: Request, response: Response) => {
-  const { username, password, role } = request.body;
+  const { username, password, role, phoneNumber }: IUser = request.body;
   const user: IUser = new UserModel({
     username: username.toLowerCase(),
     password,
     role,
+    phoneNumber,
   });
   try {
     await user.save();
@@ -64,6 +67,61 @@ export const userLogout = (request: Request, response: Response) => {
     response.clearCookie("token", cookieOptions);
 
     response.status(204).json(null);
+  } catch (error) {
+    console.log(error);
+    response
+      .status(500)
+      .json({ error: "Internal error, please try again", code: error });
+  }
+};
+
+export const findUser = async (request: Request, response: Response) => {
+  try {
+    const { username } = request.params;
+    const user = await UserModel.findOne({ username });
+    if (!user) response.status(404).json(null);
+    else {
+      const otpCode = await sendSMSVerification(`+244${user.phoneNumber}`);
+      const OtpModel = new OTPModel({ code: otpCode, userId: user._id });
+      await OtpModel.save();
+      response.status(200).json({ message: "code has been sent." });
+    }
+  } catch (error) {
+    console.log(error);
+    response
+      .status(500)
+      .json({ error: "Internal error, please try again", code: error });
+  }
+};
+
+export const verifyOTPCode = async (request: Request, response: Response) => {
+  try {
+    const { userId } = request.params;
+    const { code } = request.body;
+    const otpRecord = await OTPModel.findOneAndDelete({ userId });
+
+    if (otpRecord?.code === code) {
+      response.status(200).json({ message: "verified." });
+    } else {
+      response.status(401).json({ message: "not verified." });
+    }
+  } catch (error) {
+    console.log(error);
+    response
+      .status(500)
+      .json({ error: "Internal error, please try again", code: error });
+  }
+};
+
+export const updateUser = async (request: Request, response: Response) => {
+  try {
+    const { id } = request.params;
+    const { username, password, role }: IUser = request.body;
+    await UserModel.findOneAndUpdate(
+      { _id: id },
+      { $set: { username, password, role } },
+      { $upsert: true, new: true }
+    );
   } catch (error) {
     console.log(error);
     response

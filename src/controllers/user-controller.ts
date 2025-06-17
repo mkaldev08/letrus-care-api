@@ -84,7 +84,7 @@ export const findUser = async (request: Request, response: Response) => {
       const otpCode = await sendSMSVerification(`+244${user.phoneNumber}`);
       const OtpModel = new OTPModel({ code: otpCode, userId: user._id });
       await OtpModel.save();
-      response.status(200).json({ message: "code has been sent." });
+      response.status(200).json({ user, message: "code has been sent." });
     }
   } catch (error) {
     console.log(error);
@@ -98,12 +98,13 @@ export const verifyOTPCode = async (request: Request, response: Response) => {
   try {
     const { userId } = request.params;
     const { code } = request.body;
+    // Verificar a conslta correctamente na DB
     const otpRecord = await OTPModel.findOneAndDelete({ userId });
 
     if (otpRecord?.code === code) {
       response.status(200).json({ message: "verified." });
     } else {
-      response.status(401).json({ message: "not verified." });
+      response.status(400).json({ message: "not verified." });
     }
   } catch (error) {
     console.log(error);

@@ -17,7 +17,7 @@ export async function sendSMSVerification(
   try {
     const newCode = generateVerificationCode();
     client.messages.create({
-      body: `Your Letrus Care Code: ${newCode}`,
+      body: `O teu código Letrus Care: ${newCode}`,
       to: phoneNumber,
       from: process.env.MY_PHONE_NUMBER as string,
     });

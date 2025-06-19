@@ -99,16 +99,17 @@ export const verifyOTPCode = async (request: Request, response: Response) => {
     const { userId } = request.params;
     const { code } = request.body;
 
-    
-    const otpRecord = await OTPModel.findOne({ userId })
-      .sort({ createdAt: -1 });
+    const otpRecord = await OTPModel.findOne({ userId }).sort({
+      createdAt: -1,
+    });
 
     if (!otpRecord) {
-      return response.status(400).json({ message: "OTP not found." });
+      response.status(400).json({ message: "OTP not found." });
+      return;
     }
 
     if (otpRecord.code === code) {
-      await OTPModel.deleteMany({ userId }); 
+      await OTPModel.deleteMany({ userId });
       response.status(200).json({ message: "verified." });
     } else {
       response.status(400).json({ message: "not verified." });

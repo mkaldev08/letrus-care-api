@@ -21,14 +21,16 @@ export const createUser = async (request: Request, response: Response) => {
   }
 };
 
-const cookieOptions: {
+type cookieOptionsType = {
   httpOnly: boolean;
   secure: boolean;
   sameSite: "strict" | "lax" | "none" | undefined | boolean;
-} = {
+};
+
+const cookieOptions: cookieOptionsType = {
   httpOnly: true,
   secure: Boolean(process.env.SECURE_ON_COOKIE as string), // true if in production
-  sameSite: process.env.SAME_SITE as "strict" | "lax" | "none" | undefined,
+  sameSite: (process.env.SAME_SITE as cookieOptionsType["sameSite"]) || "lax",
 };
 
 export const loginAccount = async (request: Request, response: Response) => {

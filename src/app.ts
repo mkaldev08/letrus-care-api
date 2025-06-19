@@ -20,7 +20,7 @@ import { teacherRouter } from "./routes/teacher-router";
 import { attendanceRouter } from "./routes/attendance-router";
 import { centerRouter } from "./routes/center-router";
 import { dashboardRouter } from "./routes/dashboard-router";
-import {healthCheckRouter} from "./routes/health-check-router";
+import { healthCheckRouter } from "./routes/health-check-router";
 
 const app: Application = express();
 
@@ -29,8 +29,16 @@ app.use(cors({ credentials: true, origin: process.env.APP_URL }));
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
 app.disable("x-powered-by");
+
+// Cookie parser só quando necessário
+app.use((req, res, next) => {
+  if (req.headers.cookie) {
+    cookieParser()(req, res, next);
+  } else {
+    next();
+  }
+});
 
 const options = {
   failOnErrors: true, // 500

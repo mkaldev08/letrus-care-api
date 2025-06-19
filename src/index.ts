@@ -3,7 +3,8 @@ import app from "./app";
 import debugLib from "debug";
 import http from "http";
 
-const debug = debugLib("bantu-lab-api:server");
+const debug = debugLib("letrus-care-api:server");
+
 
 const port = normalizePort(process.env.PORT || "3000");
 app.set("port", port);

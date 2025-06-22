@@ -29,7 +29,7 @@ type cookieOptionsType = {
 
 const cookieOptions: cookieOptionsType = {
   httpOnly: true,
-  secure: Boolean(process.env.SECURE_ON_COOKIE as string), // true if in production
+  secure: Boolean(process.env.SECURE_ON_COOKIE as string), // true em "production"
   sameSite: (process.env.SAME_SITE as cookieOptionsType["sameSite"]) || "lax",
 };
 
@@ -41,7 +41,7 @@ export const loginAccount = async (request: Request, response: Response) => {
     if (!user) {
       response.status(401).json({ error: "Verifica o username" });
     } else {
-      const same = await isCorrectPassword(password, user.password);
+      const same = await isCorrectHashedData(password, user.password);
       if (!same) {
         response.status(401).json({ error: "Verifica a senha" });
       } else {
@@ -90,9 +90,7 @@ export const findUser = async (request: Request, response: Response) => {
     }
   } catch (error) {
     console.log(error);
-    response
-      .status(500)
-      .json({ error: "Internal error, please try again", code: error });
+    response.status(500).json({ error: "Internal error, please try again" });
   }
 };
 
@@ -101,26 +99,33 @@ export const verifyOTPCode = async (request: Request, response: Response) => {
     const { userId } = request.params;
     const { code } = request.body;
 
-    const otpRecord = await OTPModel.findOne({ userId }).sort({
+    const otpRecord = await OTPModel.findOne({
+      userId,
+      status: "pending",
+    }).sort({
       createdAt: -1,
     });
 
     if (!otpRecord) {
-      response.status(400).json({ message: "OTP not found." });
+      response
+        .status(400)
+        .json({ message: "Código OTP inválido ou expirado." });
       return;
     }
-
-    if (otpRecord.code === code) {
-      await OTPModel.deleteMany({ userId });
-      response.status(200).json({ message: "verified." });
+    const same = await isCorrectHashedData(code?.toString(), otpRecord.code);
+    if (same) {
+      await OTPModel.updateOne({ _id: otpRecord._id }, { status: "used" });
+      response
+        .status(200)
+        .json({ message: "Código OTP verificado com sucesso." });
     } else {
-      response.status(400).json({ message: "not verified." });
+      response.status(400).json({ message: "Código OTP incorreto." });
     }
   } catch (error) {
-    console.log(error);
-    response
-      .status(500)
-      .json({ error: "Internal error, please try again", code: error });
+    console.error("Erro ao verificar OTP:", error);
+    response.status(500).json({
+      error: "Erro interno do servidor. Por favor, tente novamente mais tarde.",
+    });
   }
 };
 
@@ -141,15 +146,14 @@ export const updateUser = async (request: Request, response: Response) => {
   }
 };
 
-// Método assíncrono para verificar a senha correta
-const isCorrectPassword = async function (
-  bodyPassword: string,
-  userPassword: string
+const isCorrectHashedData = async function (
+  requested: string,
+  target: string
 ): Promise<boolean> {
   try {
-    const same = await bcrypt.compare(bodyPassword, userPassword);
+    const same = await bcrypt.compare(requested, target);
     return same;
   } catch (err) {
-    throw new Error(`Erro ao encriptar senha: ${err}`);
+    throw new Error(`Erro ao encriptar campo: ${err}`);
   }
 };

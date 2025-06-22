@@ -7,11 +7,11 @@
     "name": "Pedro Manuel Kalueka",
     "email": "pedrokalueca@gmail.com"
   },
-  "scripts": {
-    "build": "npm i && tsc --sourceMap false",
-    "start": "node --max-old-space-size=384 --optimize-for-size dist/index.js",
-    "dev": "nodemon --delay 1500ms"
-  },
+"scripts": {
+  "build": "npm install --include=dev && tsc --sourceMap false",
+  "start": "node --max-old-space-size=384 dist/index.js",
+  "dev": "nodemon"
+},
   "dependencies": {
     "bcrypt": "^5.1.1",
     "cookie-parser": "~1.4.7",

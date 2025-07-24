@@ -7,11 +7,11 @@
     "name": "Pedro Manuel Kalueka",
     "email": "pedrokalueca@gmail.com"
   },
-"scripts": {
-  "build": "npm install --include=dev && tsc --sourceMap false",
-  "start": "node --max-old-space-size=384 dist/index.js",
-  "dev": "nodemon"
-},
+  "scripts": {
+    "build": "npm install --include=dev && tsc --sourceMap false",
+    "start": "node --max-old-space-size=384 dist/index.js",
+    "dev": "nodemon"
+  },
   "dependencies": {
     "bcrypt": "^5.1.1",
     "cookie-parser": "~1.4.7",
@@ -28,6 +28,7 @@
     "twilio": "^5.5.2"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.1.1",
     "@types/bcrypt": "^5.0.2",
     "@types/cookie-parser": "^1.4.7",
     "@types/cors": "^2.8.17",
@@ -42,6 +43,7 @@
     "@types/swagger-ui-express": "^4.1.8",
     "nodemon": "^3.1.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "ultracite": "5.0.36"
   }
 }

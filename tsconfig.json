@@ -8,10 +8,12 @@
     "forceConsistentCasingInFileNames": true,
     "outDir": "./dist",
     "resolveJsonModule": true,
+    "strictNullChecks": true
   },
   "include": [
-    "src/**/*"
-, "production.deps.js"  ],
+    "src/**/*",
+    "production.deps.js"
+  ],
   "exclude": [
     "node_modules"
   ]

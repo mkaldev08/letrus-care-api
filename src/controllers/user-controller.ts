@@ -1,9 +1,9 @@
-import { Request, Response } from "express";
-import { UserModel, IUser } from "../models/user-model";
 import bcrypt from "bcrypt";
+import type { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { sendSMSVerification } from "./otp-controller";
 import { OTPModel } from "../models/otp-model";
+import { UserModel, type IUser } from "../models/user-model";
+import { sendSMSVerification } from "./otp-controller";
 
 export const createUser = async (request: Request, response: Response) => {
   const { username, password, role, phoneNumber }: IUser = request.body;
@@ -112,7 +112,13 @@ export const verifyOTPCode = async (request: Request, response: Response) => {
         .json({ message: "Código OTP inválido ou expirado." });
       return;
     }
-    const same = await isCorrectHashedData(code?.toString(), otpRecord.code);
+
+    if (code === undefined || code === null) {
+      response.status(400).json({ message: "Código OTP não fornecido." });
+      return;
+    }
+    const codeAsString = code.toString();
+    const same = await isCorrectHashedData(codeAsString, otpRecord.code);
     if (same) {
       await OTPModel.updateOne({ _id: otpRecord._id }, { status: "used" });
       response

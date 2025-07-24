@@ -12,6 +12,7 @@ export interface IClass extends Document {
   status: "active" | "inactive";
   userId: Schema.Types.ObjectId;
   schedule: string;
+  schoolYear: Schema.Types.ObjectId;
 }
 
 const classSchema = new Schema<IClass>({
@@ -30,6 +31,7 @@ const classSchema = new Schema<IClass>({
   status: { type: String, enum: ["active", "inactive"], default: "active" },
   userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
   schedule: { type: String, required: true },
+  schoolYear: { type: Schema.Types.ObjectId, ref: "SchoolYear", required: true },
 });
 
 classSchema.index({

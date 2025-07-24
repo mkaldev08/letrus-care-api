@@ -50,7 +50,7 @@ export const createPayment = async (request: Request, response: Response) => {
     response.status(201).json({ payment, receipt });
   } catch (error) {
     console.error("Erro ao criar pagamento:", error);
-    response.status(500).json({ error: "Erro interno do servidor" });
+    response.status(500).json({ error: "Erro interno do servidor " });
   }
 };
 

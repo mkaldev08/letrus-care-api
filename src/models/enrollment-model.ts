@@ -1,5 +1,7 @@
 import { Schema, model, Document } from "mongoose";
 
+// TODO: refactorar a logica de inscricao, tirar propriedades redudantes pois já vêem no "classId"
+
 export interface IEnrollment extends Document {
   studentId: Schema.Types.ObjectId;
   courseId: Schema.Types.ObjectId;
@@ -10,6 +12,7 @@ export interface IEnrollment extends Document {
   doc_file: string;
   image_file: string;
   userId: Schema.Types.ObjectId;
+  classId: Schema.Types.ObjectId;
 }
 
 const enrollmentSchema = new Schema<IEnrollment>({
@@ -22,6 +25,7 @@ const enrollmentSchema = new Schema<IEnrollment>({
     default: "enrolled",
   },
   centerId: { type: Schema.Types.ObjectId, ref: "Center", required: true },
+  classId: { type: Schema.Types.ObjectId, ref: "Class", required: true },
   userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
   grade: {
     type: Schema.Types.ObjectId,

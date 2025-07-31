@@ -1,6 +1,5 @@
-# Letrus Care API
-
-![Letrus Care Logo](https://via.placeholder.com/150)
+# Letrus Care API 
+<img src="public/img/logo.png" width="50" alt="Logo do Letrus Care">
 
 ## Sobre o Projeto
 

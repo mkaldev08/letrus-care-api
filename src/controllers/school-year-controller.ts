@@ -5,15 +5,18 @@ export const createSchoolYear = async (
   request: Request,
   response: Response
 ) => {
-  const { description, startDate, endDate }: ISchoolYear = request.body;
+  const { description, startDate, endDate, isCurrent }: ISchoolYear = request.body;
+  const { center } = request.params
   const schoolYear: ISchoolYear = new SchoolYearModel({
     description,
     startDate,
     endDate,
+    center,
+    isCurrent,
   });
   try {
     await schoolYear.save();
-    response.status(201).json(schoolYear._id);
+    response.status(201).json({ _id: schoolYear._id, description });
   } catch (error) {
     response.status(500).json(error);
   }
@@ -21,12 +24,14 @@ export const createSchoolYear = async (
 
 export const getSchoolYears = async (request: Request, response: Response) => {
   try {
+    const { center } = request.params;
+
     const page = parseInt(request.query.page as string) || 1;
     const limit = Number(process.env.queryLimit) as number;
     const skip = (page - 1) * limit;
-    const totalSchoolYears = await SchoolYearModel.countDocuments({});
+    const totalSchoolYears = await SchoolYearModel.countDocuments({ center });
 
-    const schoolYears = await SchoolYearModel.find({})
+    const schoolYears = await SchoolYearModel.find({ center })
       .skip(skip)
       .limit(limit)
       .sort({
@@ -34,9 +39,9 @@ export const getSchoolYears = async (request: Request, response: Response) => {
       });
     schoolYears
       ? response.status(200).json({
-          schoolYears,
-          totalSchoolYear: Math.ceil(totalSchoolYears / limit),
-        })
+        schoolYears,
+        totalSchoolYear: Math.ceil(totalSchoolYears / limit),
+      })
       : response.status(404).json(null);
   } catch (error) {
     response
@@ -50,7 +55,9 @@ export const getSchoolYearsNoLimited = async (
   response: Response
 ) => {
   try {
-    const schoolYears = await SchoolYearModel.find({}).sort({
+    const { center } = request.params;
+
+    const schoolYears = await SchoolYearModel.find({ center }).sort({
       startDate: 1,
     });
     response.status(200).json(schoolYears);
@@ -72,7 +79,7 @@ export const getSchoolYear = async (request: Request, response: Response) => {
 export const editSchoolYear = async (request: Request, response: Response) => {
   try {
     const { id } = request.params;
-    const { description, startDate, endDate, isCurrent }: ISchoolYear =
+    const { description, startDate, endDate }: ISchoolYear =
       request.body;
     const schoolYear = SchoolYearModel.findOneAndUpdate(
       { _id: id },
@@ -81,7 +88,6 @@ export const editSchoolYear = async (request: Request, response: Response) => {
           description,
           startDate,
           endDate,
-          isCurrent,
         },
       },
       { $upsert: true, new: true }

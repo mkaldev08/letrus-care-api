@@ -40,4 +40,4 @@ Encontrou um bug ou quer sugerir uma melhoria? Por favor, abra uma issue no GitH
 Se tiver alguma dúvida ou sugestão, sinta-se à vontade para entrar em contato:
 
 Email: @pedrokalueca@gmail.com
-GitHub: @manuelkalueka
+GitHub: @mkaldev08

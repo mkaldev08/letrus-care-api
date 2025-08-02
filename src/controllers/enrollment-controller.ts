@@ -9,11 +9,11 @@ export const createEnrollment = async (
 ) => {
   const {
     studentId,
-    courseId,
+    classId,
     enrollmentDate,
     status,
+    hasScholarShip,
     centerId,
-    grade,
     userId,
   }: IEnrollment = request.body;
 
@@ -21,11 +21,11 @@ export const createEnrollment = async (
 
   const enrollment: IEnrollment = new EnrollmentModel({
     studentId,
-    courseId,
+    classId,
     enrollmentDate,
     status,
+    hasScholarShip,
     centerId,
-    grade,
     userId,
   });
   try {
@@ -66,8 +66,13 @@ export const getEnrollments = async (request: Request, response: Response) => {
       .skip(skip)
       .limit(limit)
       .populate("studentId")
-      .populate({ path: "courseId", select: "name" })
-      .populate({ path: "grade", select: "grade" })
+      .populate({
+        path: "classId",
+        populate: [
+          { path: "course", select: "name" },
+          { path: "grade", select: "grade" },
+        ],
+      })
       .sort({
         enrollmentDate: -1,
       });
@@ -119,8 +124,13 @@ export const getEnrollment = async (request: Request, response: Response) => {
   try {
     const enrollment = await EnrollmentModel.findById(id)
       .populate("studentId")
-      .populate({ path: "courseId", select: "name enrollmentFee" })
-      .populate({ path: "grade", select: "grade" })
+      .populate({
+        path: "classId",
+        populate: [
+          { path: "course", select: "name enrollmentFee" },
+          { path: "grade", select: "grade" },
+        ],
+      })
       .populate("userId");
     enrollment;
     const receipt = await ReceiptModel.findOne({ enrollmentId: id });
@@ -138,8 +148,13 @@ export const getEnrollmentByStudentId = async (
   const { studentId } = request.params;
   try {
     const enrollment = await EnrollmentModel.findOne({ studentId })
-      .populate("courseId")
-      .populate({ path: "grade", select: "grade" });
+     .populate({
+        path: "classId",
+        populate: [
+          { path: "course"},
+          { path: "grade", select: "grade" },
+        ],
+      })
     enrollment
       ? response.status(200).json(enrollment)
       : response.status(404).json(null);
@@ -150,7 +165,7 @@ export const getEnrollmentByStudentId = async (
 
 export const editEnrollment = async (request: Request, response: Response) => {
   const { id } = request.params;
-  const { studentId, courseId, enrollmentDate, status, grade }: IEnrollment =
+  const { studentId, enrollmentDate, status, classId }: IEnrollment =
     request.body;
   try {
     const enrollment = await EnrollmentModel.findOneAndUpdate(
@@ -158,10 +173,9 @@ export const editEnrollment = async (request: Request, response: Response) => {
       {
         $set: {
           studentId,
-          courseId,
+          classId,
           enrollmentDate,
           status,
-          grade,
         },
       },
       { $upsert: true, new: true }

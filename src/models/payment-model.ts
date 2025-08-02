@@ -44,6 +44,7 @@ const paymentSchema = new Schema<IPayment>({
 });
 
 // Hook para marcar a data de expiração do pagamento um mês após a data de pagamento
+//FIXME: pagamento pré pago, até dia 10 do mês por frequentar
 paymentSchema.pre("save", function (next) {
   const payment = this;
   try {

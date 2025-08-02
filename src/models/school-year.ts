@@ -10,7 +10,7 @@ export interface ISchoolYear extends Document {
 
 //TODO: Fazer com que só seja possivel deixar um ano unico letivo como atual
 //TODO: Implementar validação para que o ano letivo atual não possa ser deletado
-// TODO: Implementar validacao p nao criar mais que um ano lectivo no mesmo periodo de tempo
+//TODO: Implementar validacao p nao criar mais que um ano lectivo no mesmo periodo de tempo
 //FIXME: tentar colocar verificação de mesma descrição no unico centro "nao pode existir dos anos com mesmo nome no mesmo centro"
 
 const schoolYearSchema = new Schema<ISchoolYear>({

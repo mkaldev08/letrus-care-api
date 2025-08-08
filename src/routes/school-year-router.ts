@@ -2,8 +2,9 @@ import { Router } from "express";
 import {
   createSchoolYear,
   editSchoolYear,
-  getSchoolYear,
+  getSchoolYearById,
   getSchoolYears,
+  getCurrentSchoolYear,
   getSchoolYearsNoLimited
 } from "../controllers/school-year-controller";
 
@@ -14,5 +15,6 @@ schoolYearRouter.post("/new/:center", createSchoolYear);
 schoolYearRouter.get("/all/:center", getSchoolYears);
 schoolYearRouter.get("/:center", getSchoolYearsNoLimited);
 
-schoolYearRouter.get("/:id", getSchoolYear);
+schoolYearRouter.get("/:id", getSchoolYearById);
+schoolYearRouter.get("/current/:center", getCurrentSchoolYear);
 schoolYearRouter.put("/edit/:id", editSchoolYear);

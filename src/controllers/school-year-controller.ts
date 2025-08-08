@@ -5,8 +5,9 @@ export const createSchoolYear = async (
   request: Request,
   response: Response
 ) => {
-  const { description, startDate, endDate, isCurrent }: ISchoolYear = request.body;
-  const { center } = request.params
+  const { description, startDate, endDate, isCurrent }: ISchoolYear =
+    request.body;
+  const { center } = request.params;
   const schoolYear: ISchoolYear = new SchoolYearModel({
     description,
     startDate,
@@ -39,9 +40,9 @@ export const getSchoolYears = async (request: Request, response: Response) => {
       });
     schoolYears
       ? response.status(200).json({
-        schoolYears,
-        totalSchoolYear: Math.ceil(totalSchoolYears / limit),
-      })
+          schoolYears,
+          totalSchoolYear: Math.ceil(totalSchoolYears / limit),
+        })
       : response.status(404).json(null);
   } catch (error) {
     response
@@ -66,7 +67,10 @@ export const getSchoolYearsNoLimited = async (
   }
 };
 
-export const getSchoolYear = async (request: Request, response: Response) => {
+export const getSchoolYearById = async (
+  request: Request,
+  response: Response
+) => {
   try {
     const { id } = request.params;
     const schoolYear = await SchoolYearModel.findById(id);
@@ -76,11 +80,26 @@ export const getSchoolYear = async (request: Request, response: Response) => {
   }
 };
 
+export const getCurrentSchoolYear = async (
+  request: Request,
+  response: Response
+) => {
+  try {
+    const { center } = request.params;
+    const schoolYear = await SchoolYearModel.findOne({
+      center,
+      isCurrent: true,
+    });
+    response.status(200).json(schoolYear);
+  } catch (error) {
+    response.status(500).json("Occorreu algum erro ao buscar ano lectivo");
+  }
+};
+
 export const editSchoolYear = async (request: Request, response: Response) => {
   try {
     const { id } = request.params;
-    const { description, startDate, endDate }: ISchoolYear =
-      request.body;
+    const { description, startDate, endDate }: ISchoolYear = request.body;
     const schoolYear = SchoolYearModel.findOneAndUpdate(
       { _id: id },
       {

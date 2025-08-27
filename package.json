@@ -9,9 +9,10 @@
   },
   "scripts": {
     "build": "npm install --include=dev && tsc --sourceMap false",
-    "start": "node --max-old-space-size=384 dist/index.js && node ./src/migrations/2025-08-10-migrate-course-grade-to-classId.js",
+    "start": "node --max-old-space-size=384 dist/index.js",
     "dev": "nodemon",
-    "db:migrate": "node ./src/migrations/2025-08-10-migrate-course-grade-to-classId.js"
+    "db:migrate": "node ./src/migrations/2025-08-10-migrate-course-grade-to-classId.js",
+    "postinstall": "npm run db:migrate"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",

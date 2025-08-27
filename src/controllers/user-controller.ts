@@ -112,7 +112,13 @@ export const verifyOTPCode = async (request: Request, response: Response) => {
         .json({ message: "Código OTP inválido ou expirado." });
       return;
     }
-    const same = await isCorrectHashedData(code?.toString(), otpRecord.code);
+
+    if (code === undefined || code === null) {
+      response.status(400).json({ message: "Código OTP não fornecido." });
+      return;
+    }
+    const codeAsString = code.toString();
+    const same = await isCorrectHashedData(codeAsString, otpRecord.code);
     if (same) {
       await OTPModel.updateOne({ _id: otpRecord._id }, { status: "used" });
       response

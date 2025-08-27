@@ -1,6 +1,5 @@
-# Letrus Care API
-
-![Letrus Care Logo](https://via.placeholder.com/150)
+# Letrus Care API 
+<img src="public/img/logo.png" width="50" alt="Logo do Letrus Care">
 
 ## Sobre o Projeto
 
@@ -41,4 +40,4 @@ Encontrou um bug ou quer sugerir uma melhoria? Por favor, abra uma issue no GitH
 Se tiver alguma dúvida ou sugestão, sinta-se à vontade para entrar em contato:
 
 Email: @pedrokalueca@gmail.com
-GitHub: @manuelkalueka
+GitHub: @mkaldev08

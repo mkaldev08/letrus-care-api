@@ -50,7 +50,7 @@ export const createPayment = async (request: Request, response: Response) => {
     response.status(201).json({ payment, receipt });
   } catch (error) {
     console.error("Erro ao criar pagamento:", error);
-    response.status(500).json({ error: "Erro interno do servidor" });
+    response.status(500).json({ error: "Erro interno do servidor " });
   }
 };
 
@@ -123,7 +123,14 @@ export const getPayment = async (request: Request, response: Response) => {
       .populate({
         path: "enrollmentId",
         populate: {
-          path: "studentId courseId grade",
+          path: "studentId",
+        },
+      })
+      .populate({
+        path: "enrollmentId",
+        populate: {
+          path: "classId",
+          populate: [{ path: "course" }, { path: "grade", select: "grade" }],
         },
       })
       .populate("userId");
@@ -202,7 +209,7 @@ export const searchPayments = async (request: Request, response: Response) => {
 
     if (!query) {
       response.status(400).json({ message: "O termo de busca é obrigatório." });
-      return
+      return;
     }
 
     // Buscar estudantes com base no $text search
@@ -213,7 +220,7 @@ export const searchPayments = async (request: Request, response: Response) => {
 
     if (students.length === 0) {
       response.json([]);
-      return
+      return;
     }
 
     const studentIds = students.map((s) => s._id);

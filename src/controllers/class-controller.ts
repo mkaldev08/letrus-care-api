@@ -13,6 +13,7 @@ export const createClass = async (request: Request, response: Response) => {
     userId,
     schedule,
     grade,
+    schoolYear
   } = request.body;
 
   const classInCenter: IClass = new ClassModel({
@@ -26,6 +27,7 @@ export const createClass = async (request: Request, response: Response) => {
     schedule,
     userId,
     grade,
+    schoolYear
   });
 
   try {

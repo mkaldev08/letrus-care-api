@@ -11,7 +11,6 @@ export interface ICenter extends Document {
   createdBy: Schema.Types.ObjectId;
   fileType?: String;
   fileData?: String;
-  year_school: string;
 }
 
 const centerSchema = new Schema<ICenter>({
@@ -20,7 +19,6 @@ const centerSchema = new Schema<ICenter>({
   nif: { type: String, required: true, minLength: 10, unique: true },
   phoneNumber: { type: String, required: true, unique: true },
   email: { type: String, unique: true },
-  year_school: { type: String, required: true },
   createdBy: {
     type: Schema.Types.ObjectId,
     ref: "User",

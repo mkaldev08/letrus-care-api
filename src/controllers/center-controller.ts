@@ -41,7 +41,6 @@ export const createCenter = async (request: Request, response: Response) => {
     email,
     documentCode,
     createdBy,
-    year_school,
   } = request.body;
   try {
     const center: ICenter = new CenterModel({
@@ -52,7 +51,7 @@ export const createCenter = async (request: Request, response: Response) => {
       email,
       documentCode,
       createdBy,
-      year_school,
+
     });
 
     const coursesWithCenter = defaultCourses.map((course) => ({

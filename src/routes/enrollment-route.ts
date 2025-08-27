@@ -21,5 +21,6 @@ enrollmentRouter.get("/all/:centerId", getEnrollments);
 enrollmentRouter.get("/:id", getEnrollment);
 enrollmentRouter.get("/student/:studentId", getEnrollmentByStudentId);
 enrollmentRouter.get("/add-class/:centerId", getStudentsForAddOnClass);
+
 enrollmentRouter.put("/edit/:id", editEnrollment);
 enrollmentRouter.patch("/status/:id", changeStatus);

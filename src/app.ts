@@ -20,6 +20,8 @@ import { teacherRouter } from "./routes/teacher-router";
 import { attendanceRouter } from "./routes/attendance-router";
 import { centerRouter } from "./routes/center-router";
 import { dashboardRouter } from "./routes/dashboard-router";
+import { schoolYearRouter } from "./routes/school-year-router";
+
 import { healthCheckRouter } from "./routes/health-check-router";
 
 const app: Application = express();
@@ -85,6 +87,8 @@ app.use("/classes", withAuth, classRouter);
 app.use("/teachers", withAuth, teacherRouter);
 app.use("/attendances", withAuth, attendanceRouter);
 app.use("/dashboard", withAuth, dashboardRouter);
+app.use("/school-year", withAuth, schoolYearRouter);
+
 app.use("/health-check", healthCheckRouter);
 
 export default app;

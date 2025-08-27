@@ -1,5 +1,7 @@
 import { Schema, model, Document } from "mongoose";
 
+//TODO: colocar opcoes de percentagens ao escolher as taxas
+
 export interface ICourse extends Document {
   name: string;
   description: string;

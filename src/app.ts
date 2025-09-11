@@ -12,7 +12,7 @@ import { withAuth } from "./middlewares/auth";
 import { userRouter } from "./routes/user-router";
 import { studentRouter } from "./routes/student-router";
 import { courseRouter } from "./routes/course-router";
-import { enrollmentRouter } from "./routes/enrollment-route";
+import { enrollmentRouter } from "./routes/enrollment-router";
 import { gradeRouter } from "./routes/grade-router";
 import { paymentRouter } from "./routes/payment-router";
 import { classRouter } from "./routes/class-router";
@@ -21,6 +21,7 @@ import { attendanceRouter } from "./routes/attendance-router";
 import { centerRouter } from "./routes/center-router";
 import { dashboardRouter } from "./routes/dashboard-router";
 import { schoolYearRouter } from "./routes/school-year-router";
+import { financialPlanRouter } from "./routes/financialPlan-router";
 
 import { healthCheckRouter } from "./routes/health-check-router";
 
@@ -88,6 +89,7 @@ app.use("/teachers", withAuth, teacherRouter);
 app.use("/attendances", withAuth, attendanceRouter);
 app.use("/dashboard", withAuth, dashboardRouter);
 app.use("/school-year", withAuth, schoolYearRouter);
+app.use("/financial-plan", withAuth, financialPlanRouter);
 
 app.use("/health-check", healthCheckRouter);
 

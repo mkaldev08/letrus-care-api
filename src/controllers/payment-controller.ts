@@ -234,21 +234,38 @@ export const searchPayments = async (request: Request, response: Response) => {
     const enrollmentIds = enrollments.map((e) => e._id);
 
     // Buscar pagamentos ligados a esses estudantes
+    const page = parseInt(request.query.page as string) || 1;
+    const limit = Number(process.env.queryLimit) as number;
+    const skip = (page - 1) * limit;
+    const totalPayments = await PaymentModel.countDocuments({
+      centerId,
+      enrollmentId: { $in: enrollmentIds },
+    });
+
     const payments = await PaymentModel.find({
       centerId,
       enrollmentId: { $in: enrollmentIds },
     })
+      .skip(skip)
+      .limit(limit)
+      .sort({
+        dueDate: -1,
+      })
       .populate({
         path: "enrollmentId",
         populate: {
           path: "studentId",
         },
-      })
-      .sort({
-        paymentDate: -1,
       });
-
-    response.json(payments);
+    payments
+      ? response.status(200).json({
+          payments,
+          totalPayments:
+            Math.ceil(totalPayments / limit) !== 0
+              ? Math.ceil(totalPayments / limit)
+              : 1,
+        })
+      : response.status(404).json(null);
   } catch (error) {
     response.status(500).json({ message: "Erro ao buscar pagamentos", error });
   }

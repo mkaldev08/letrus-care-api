@@ -6,6 +6,7 @@ export interface IUser extends Document {
   password: string;
   phoneNumber: string;
   role: "admin" | "teacher" | "student";
+  //TODO: adicionar o employer no perfil
   createdAt: Date;
   updatedAt: Date;
 }

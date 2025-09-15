@@ -5,6 +5,7 @@ import { SchoolYearModel } from "../models/school-year-model";
 import { getMonthsBetween } from "../utils/getMonth-in-school-year";
 import { ClassModel } from "../models/class-model";
 import { CourseModel } from "../models/course-model";
+import { Types } from "mongoose";
 
 export async function generateFinancialPlan(
   request: Request,
@@ -66,6 +67,29 @@ export async function generateFinancialPlan(
         tutionFee: courseMatched.fee,
       });
     }
+  } catch (error) {
+    response.status(500).json({ message: "Erro inesperado" });
+    console.log(error);
+  }
+}
+
+export async function getFinancialPlan(request: Request, response: Response) {
+  try {
+    const { status, schoolYear } = request.query;
+
+    if (!status || !schoolYear) {
+      response.status(400).json({ message: "Parâmetros insuficientes" });
+      return;
+    }
+    const { centerId, enrollmentId } = request.params;
+
+    const result = await FinancialPlanModel.find({
+      status,
+      schoolYear,
+      centerId,
+      enrollmentId,
+    });
+    response.status(200).json(result);
   } catch (error) {
     response.status(500).json({ message: "Erro inesperado" });
     console.log(error);

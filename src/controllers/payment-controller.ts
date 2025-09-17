@@ -4,6 +4,8 @@ import { IReceipt, ReceiptModel } from "../models/payments_receipt";
 import { createCode } from "../utils/generate-code";
 import { StudentModel } from "../models/student-model";
 import { EnrollmentModel } from "../models/enrollment-model";
+import { updateFinancialPlanStatus } from "./financialPlans-controller";
+import { Types } from "mongoose";
 
 export const createPayment = async (request: Request, response: Response) => {
   const {
@@ -47,6 +49,17 @@ export const createPayment = async (request: Request, response: Response) => {
     });
 
     await receipt.save();
+
+    //actualiza o plano financeiro depois de pagar e ter o recibo
+    await updateFinancialPlanStatus(
+      "paid",
+      new Types.ObjectId(payment._id as string),
+      {
+        yearReference: payment.paymentYearReference,
+        monthReference: payment.paymentMonthReference,
+        enrollmentId: new Types.ObjectId(String(payment.enrollmentId)),
+      }
+    );
     response.status(201).json({ payment, receipt });
   } catch (error) {
     console.error("Erro ao criar pagamento:", error);

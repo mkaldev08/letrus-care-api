@@ -5,10 +5,10 @@ import {
 } from "../controllers/financialPlans-controller";
 
 export const financialPlanRouter = Router();
-financialPlanRouter.post(
+/* financialPlanRouter.post(
   "/new/:centerId/enrollment/:enrollmentId",
   generateFinancialPlan
-);
+); */
 
 financialPlanRouter.get(
   "/:centerId/enrollment/:enrollmentId",

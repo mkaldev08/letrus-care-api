@@ -3,6 +3,8 @@ import { EnrollmentModel, IEnrollment } from "../models/enrollment-model";
 import { createCode } from "../utils/generate-code";
 import { IEnrollmentReceipt, ReceiptModel } from "../models/enrollment_receipt";
 import { StudentModel } from "../models/student-model";
+import { generateFinancialPlan } from "./financialPlans-controller";
+import mongoose from "mongoose";
 
 export const createEnrollment = async (
   request: Request,
@@ -38,6 +40,11 @@ export const createEnrollment = async (
     });
 
     await receipt.save();
+
+    await generateFinancialPlan(
+      centerId,
+      enrollment._id as mongoose.Schema.Types.ObjectId
+    );
     response.status(201).json({ enrollment, receipt });
   } catch (error) {
     console.log(error);

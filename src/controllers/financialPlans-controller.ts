@@ -6,23 +6,19 @@ import { getMonthsBetween } from "../utils/getMonth-in-school-year";
 import { ClassModel } from "../models/class-model";
 import { CourseModel } from "../models/course-model";
 import { Types } from "mongoose";
+import mongoose from "mongoose";
 
 export async function generateFinancialPlan(
-  request: Request,
-  response: Response
+  centerId: mongoose.Schema.Types.ObjectId,
+  enrollmentId: mongoose.Schema.Types.ObjectId
 ) {
   try {
-    const { centerId, enrollmentId } = request.params;
-
     const schoolYear = await SchoolYearModel.findOne({
       center: centerId,
       isCurrent: true,
     });
     if (!schoolYear) {
-      response
-        .status(400)
-        .json({ message: "Ano letivo atual não encontrado." });
-      return;
+      throw new Error("Ano letivo atual não encontrado.");
     }
 
     const enrollment = await EnrollmentModel.findOne({
@@ -31,37 +27,38 @@ export async function generateFinancialPlan(
     });
 
     if (!enrollment) {
-      response.status(400).json({ message: "inscrição não encontrada." });
-      return;
+      throw new Error("inscrição não encontrada.");
     }
 
     const classMatched = await ClassModel.findById(enrollment.classId);
     if (!classMatched) {
-      response.status(404).json({ message: "Classe não encontrada." });
-      return;
+      throw new Error("Classe não encontrada.");
     }
 
     const courseMatched = await CourseModel.findById(classMatched.course);
     if (!courseMatched) {
-      response.status(404).json({ message: "Curso não encontrado." });
-      return;
+      throw new Error("Curso não encontrado.");
     }
 
     // verifica a data de inscrição e gera os meses a partir dessa data até o final do ano letivo
+    console.log("Data de inscricao ", enrollment.enrollmentDate.toDateString());
+
     const months = getMonthsBetween(
       enrollment.enrollmentDate < schoolYear.startDate
         ? schoolYear.startDate
         : enrollment.enrollmentDate,
       schoolYear.endDate
     );
-
-    for (const [index, resultMonth] of months.entries()) {
+    console.log(months); // erro no tipo e gera bug na logica, corrigir
+    for (const resultMonth of months) {
+      console.log("em numero: ", resultMonth.monthInNumber);
       //coloca a data do proximo pagamento no dia 10 do proximo mes e se for dezembro, coloca em janeiro do outro ano
       const dueDate =
-        index === 11
+        resultMonth.monthInNumber === 11
           ? new Date(resultMonth.year + 1, 0, 10)
-          : new Date(resultMonth.year, index + 1, 10);
+          : new Date(resultMonth.year, resultMonth.monthInNumber + 1, 10);
 
+      console.log("due date: ", dueDate);
       await FinancialPlanModel.create({
         schoolYear: schoolYear._id,
         month: resultMonth.month,
@@ -73,13 +70,9 @@ export async function generateFinancialPlan(
         tutionFee: courseMatched.fee,
       });
     }
-
-    response
-      .status(201)
-      .json({ message: "Plano financeiro gerado com sucesso." });
   } catch (error) {
-    response.status(500).json({ message: "Erro inesperado" });
     console.log(error);
+    throw new Error("Erro inesperado");
   }
 }
 

@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { getMonthsBetween } = require("../utils/getMonth-in-school-year");
+const { getMonthsBetween } = require("../utils/getMonth-in-school-year.js");
 require("dotenv").config();
 
 async function runMigration() {

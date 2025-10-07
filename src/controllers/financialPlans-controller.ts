@@ -5,8 +5,7 @@ import { SchoolYearModel } from "../models/school-year-model";
 import { getMonthsBetween } from "../utils/getMonth-in-school-year";
 import { ClassModel } from "../models/class-model";
 import { CourseModel } from "../models/course-model";
-import { Types } from "mongoose";
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 
 export async function generateFinancialPlan(
   centerId: mongoose.Schema.Types.ObjectId,
@@ -40,25 +39,21 @@ export async function generateFinancialPlan(
       throw new Error("Curso não encontrado.");
     }
 
-    // verifica a data de inscrição e gera os meses a partir dessa data até o final do ano letivo
-    console.log("Data de inscricao ", enrollment.enrollmentDate.toDateString());
-
     const months = getMonthsBetween(
       enrollment.enrollmentDate < schoolYear.startDate
         ? schoolYear.startDate
         : enrollment.enrollmentDate,
       schoolYear.endDate
     );
-    console.log(months); // erro no tipo e gera bug na logica, corrigir
+    console.log(months);
+
     for (const resultMonth of months) {
-      console.log("em numero: ", resultMonth.monthInNumber);
       //coloca a data do proximo pagamento no dia 10 do proximo mes e se for dezembro, coloca em janeiro do outro ano
       const dueDate =
         resultMonth.monthInNumber === 11
           ? new Date(resultMonth.year + 1, 0, 10)
           : new Date(resultMonth.year, resultMonth.monthInNumber + 1, 10);
 
-      console.log("due date: ", dueDate);
       await FinancialPlanModel.create({
         schoolYear: schoolYear._id,
         month: resultMonth.month,

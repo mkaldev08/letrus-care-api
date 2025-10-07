@@ -4,36 +4,37 @@ type TypeGetMonthsBetween = {
   monthInNumber: number;
 };
 
-export function getMonthsBetween(
-  startDate: Date,
-  endDate: Date
-): TypeGetMonthsBetween[] {
-  const meses: { month: string; inNumber: number }[] = [
-    { month: "Janeiro", inNumber: 0 },
-    { month: "Fevereiro", inNumber: 1 },
-    { month: "Março", inNumber: 2 },
-    { month: "Abril", inNumber: 3 },
-    { month: "Maio", inNumber: 4 },
-    { month: "Junho", inNumber: 5 },
-    { month: "Julho", inNumber: 6 },
-    { month: "Agosto", inNumber: 7 },
-    { month: "Setembro", inNumber: 8 },
-    { month: "Outubro", inNumber: 9 },
-    { month: "Novembro", inNumber: 10 },
-    { month: "Dezembro", inNumber: 11 },
+export function getMonthsBetween(startDate: Date, endDate: Date) {
+  const monthHardList: { month: string; monthInNumber: number }[] = [
+    { month: "Janeiro", monthInNumber: 0 },
+    { month: "Fevereiro", monthInNumber: 1 },
+    { month: "Março", monthInNumber: 2 },
+    { month: "Abril", monthInNumber: 3 },
+    { month: "Maio", monthInNumber: 4 },
+    { month: "Junho", monthInNumber: 5 },
+    { month: "Julho", monthInNumber: 6 },
+    { month: "Agosto", monthInNumber: 7 },
+    { month: "Setembro", monthInNumber: 8 },
+    { month: "Outubro", monthInNumber: 9 },
+    { month: "Novembro", monthInNumber: 10 },
+    { month: "Dezembro", monthInNumber: 11 },
   ];
 
-  let result: TypeGetMonthsBetween[] = [];
+  let result = new Array<TypeGetMonthsBetween>();
 
-  const current = new Date(startDate);
+  const currentDate = new Date(startDate);
 
-  while (current <= endDate) {
+  while (
+    currentDate.getFullYear() < endDate.getFullYear() ||
+    (currentDate.getFullYear() === endDate.getFullYear() &&
+      currentDate.getMonth() <= endDate.getMonth())
+  ) {
     result.push({
-      month: meses[current.getMonth()].month,
-      year: current.getFullYear(),
-      monthInNumber: meses[current.getMonth()].inNumber,
+      month: monthHardList[currentDate.getMonth()].month,
+      year: currentDate.getFullYear(),
+      monthInNumber: monthHardList[currentDate.getMonth()].monthInNumber,
     });
-    current.setMonth(current.getMonth() + 1);
+    currentDate.setMonth(currentDate.getMonth() + 1);
   }
 
   return result;

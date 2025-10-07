@@ -45,7 +45,7 @@ export const createEnrollment = async (
       centerId,
       enrollment._id as mongoose.Schema.Types.ObjectId
     );
-    response.status(201).json({ enrollment, receipt });
+    response.status(201).json(receipt);
   } catch (error) {
     console.log(error);
     response.status(500).json(error);

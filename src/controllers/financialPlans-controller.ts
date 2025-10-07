@@ -5,11 +5,11 @@ import { SchoolYearModel } from "../models/school-year-model";
 import { getMonthsBetween } from "../utils/getMonth-in-school-year";
 import { ClassModel } from "../models/class-model";
 import { CourseModel } from "../models/course-model";
-import mongoose, { Types } from "mongoose";
+import mongoose from "mongoose";
 
 export async function generateFinancialPlan(
-  centerId: mongoose.Schema.Types.ObjectId,
-  enrollmentId: mongoose.Schema.Types.ObjectId
+  centerId: string,
+  enrollmentId: string
 ) {
   try {
     const schoolYear = await SchoolYearModel.findOne({
@@ -45,7 +45,6 @@ export async function generateFinancialPlan(
         : enrollment.enrollmentDate,
       schoolYear.endDate
     );
-    console.log(months);
 
     for (const resultMonth of months) {
       //coloca a data do proximo pagamento no dia 10 do proximo mes e se for dezembro, coloca em janeiro do outro ano
@@ -96,35 +95,37 @@ export async function getFinancialPlan(request: Request, response: Response) {
 
 export async function updateFinancialPlanStatus(
   status: "paid" | "pending" | "overdue",
-  linkedPayment: Types.ObjectId,
+  linkedPayment: string,
   referencesConfig: {
-    yearReference: number;
     monthReference: string;
-    enrollmentId: Types.ObjectId;
+    schoolYearId: string;
+    enrollmentId: string;
   }
 ) {
   try {
-    const { yearReference, monthReference, enrollmentId } = referencesConfig;
+    const { monthReference, enrollmentId, schoolYearId } = referencesConfig;
 
-    if (yearReference === undefined || !monthReference || !enrollmentId) {
+    if (!monthReference || !enrollmentId) {
       throw new Error(
         "Parâmetros insuficientes para atualizar o plano financeiro"
       );
     }
 
-    const result = await FinancialPlanModel.findOneAndUpdate(
-      {
-        year: yearReference,
-        month: monthReference,
-        enrollmentId,
-      },
-      {
-        $set: { linkedPayment, status },
-      },
-      { $upsert: true, new: true }
-    );
+    const result = await FinancialPlanModel.findOne({
+      month: monthReference,
+      enrollmentId: new mongoose.Types.ObjectId(enrollmentId),
+      schoolYear: new mongoose.Types.ObjectId(schoolYearId),
+    });
 
-    return result;
+    if (!result) {
+      throw new Error("Plano financeiro não encontrado ou já pago.");
+    }
+    console.log("Plano financeiro encontrado para atualização:", result);
+
+    await FinancialPlanModel.updateOne(
+      { _id: result._id },
+      { $set: { linkedPayment, status } }
+    );
   } catch (error) {
     throw new Error("Erro ao atualizar o plano financeiro: " + error);
   }

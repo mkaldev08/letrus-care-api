@@ -12,16 +12,17 @@ export const createPayment = async (request: Request, response: Response) => {
     enrollmentId,
     amount,
     paymentDate,
-    paymentMonthReference,
-    paymentYearReference,
     paymentMethod,
     centerId,
     userId,
     lateFee,
+    paymentMonthReference,
+    schoolYearId,
   } = request.body;
+  console.log("Dados recebidos para criar pagamento:", request.body);
 
   // Verificação dos campos obrigatórios
-  if (!enrollmentId || !amount || !paymentMonthReference || !centerId) {
+  if (!enrollmentId || !amount || !centerId) {
     response.status(400).json({ error: "Campos obrigatórios faltando" });
     return;
   }
@@ -30,8 +31,6 @@ export const createPayment = async (request: Request, response: Response) => {
     enrollmentId,
     amount,
     paymentDate,
-    paymentMonthReference,
-    paymentYearReference,
     paymentMethod,
     centerId,
     userId,
@@ -39,7 +38,6 @@ export const createPayment = async (request: Request, response: Response) => {
   });
 
   try {
-    await payment.save();
     const receiptCode = await createCode(centerId, "P");
     const partCode = Date.now().toString();
 
@@ -48,18 +46,16 @@ export const createPayment = async (request: Request, response: Response) => {
       receiptNumber: receiptCode + partCode.slice(0, 3),
     });
 
+    //actualiza o plano financeiro depois de pagar e ter o recibo
+    await updateFinancialPlanStatus("paid", payment._id as string, {
+      monthReference: paymentMonthReference,
+      enrollmentId: String(enrollmentId),
+      schoolYearId,
+    });
+
+    await payment.save();
     await receipt.save();
 
-    //actualiza o plano financeiro depois de pagar e ter o recibo
-    await updateFinancialPlanStatus(
-      "paid",
-      new Types.ObjectId(payment._id as string),
-      {
-        yearReference: payment.paymentYearReference,
-        monthReference: payment.paymentMonthReference,
-        enrollmentId: new Types.ObjectId(String(payment.enrollmentId)),
-      }
-    );
     response.status(201).json({ payment, receipt });
   } catch (error) {
     console.error("Erro ao criar pagamento:", error);
@@ -159,11 +155,10 @@ export const getPayment = async (request: Request, response: Response) => {
 export const editPayment = async (request: Request, response: Response) => {
   const { id } = request.params;
 
-  const { paymentMethod, amount, paymentDate, paymentMonthReference } =
-    request.body;
+  const { paymentMethod, amount, paymentDate } = request.body;
   try {
     // Verificação dos campos obrigatórios
-    if (!amount || !paymentMonthReference) {
+    if (!amount || !paymentDate || !paymentMethod) {
       response.status(400).json({ error: "Campos obrigatórios faltando" });
     }
     const payment = await PaymentModel.findOneAndUpdate(
@@ -172,7 +167,6 @@ export const editPayment = async (request: Request, response: Response) => {
         $set: {
           amount,
           paymentDate,
-          paymentMonthReference,
           paymentMethod,
         },
       },

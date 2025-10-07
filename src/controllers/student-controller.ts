@@ -29,6 +29,7 @@ export const createStudent = async (request: Request, response: Response) => {
     await student.save();
     response.status(201).json(student);
   } catch (error) {
+    console.log(error);
     response.status(500).json(error);
   }
 };

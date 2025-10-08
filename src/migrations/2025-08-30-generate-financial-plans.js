@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { getMonthsBetween } = require("../utils/getMonth-in-school-year.js");
+const { getMonthsBetween } = require("./getMonth-in-school-year.js");
 require("dotenv").config();
 
 async function runMigration() {
@@ -21,6 +21,7 @@ async function runMigration() {
   const centerId = new mongoose.Types.ObjectId("67db04c75befeca56ad12aee");
 
   console.log(`Buscando ano letivo atual para o centro ${centerId}...`);
+
   const schoolYear = await SchoolYearCollection.findOne({
     center: centerId,
     isCurrent: true,
@@ -35,13 +36,20 @@ async function runMigration() {
 
   console.log(`Encontradas ${enrollments.length} matrículas.`);
 
-  const months = getMonthsBetween(schoolYear.startDate, schoolYear.endDate);
-
   for (const enrollment of enrollments) {
     // 🔎 buscar turma e curso manualmente
+
+    const months = getMonthsBetween(
+      enrollment.enrollmentDate < schoolYear.startDate
+        ? schoolYear.startDate
+        : enrollment.enrollmentDate,
+      schoolYear.endDate
+    );
+
     const classDoc = await ClassesCollection.findOne({
       _id: enrollment.classId,
     });
+
     if (!classDoc) {
       console.warn(`Turma não encontrada para matrícula ${enrollment._id}`);
       continue;
@@ -55,8 +63,12 @@ async function runMigration() {
 
     console.log(`Criando planos para aluno ${enrollment.userId}...`);
 
-    for (const [index, resultMonth] of months.entries()) {
-      const dueDate = new Date(resultMonth.year, index + 1, 10);
+    for (const resultMonth of months) {
+      //coloca a data do proximo pagamento no dia 10 do proximo mes e se for dezembro, coloca em janeiro do outro ano
+      const dueDate =
+        resultMonth.monthInNumber === 11
+          ? new Date(resultMonth.year + 1, 0, 10)
+          : new Date(resultMonth.year, resultMonth.monthInNumber + 1, 10);
 
       await FinancialPlanCollection.insertOne({
         schoolYear: schoolYear._id,
@@ -66,8 +78,7 @@ async function runMigration() {
         enrollmentId: enrollment._id,
         centerId: enrollment.centerId,
         userId: enrollment.userId,
-        tutionFee: courseDoc.fee, // ⚡ agora vem do curso
-        status: "pending",
+        tutionFee: courseDoc.fee,
       });
 
       console.log(

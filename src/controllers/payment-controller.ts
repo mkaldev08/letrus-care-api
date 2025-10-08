@@ -5,7 +5,7 @@ import { createCode } from "../utils/generate-code";
 import { StudentModel } from "../models/student-model";
 import { EnrollmentModel } from "../models/enrollment-model";
 import { updateFinancialPlanStatus } from "./financialPlans-controller";
-import { Types } from "mongoose";
+import { FinancialPlanModel } from "../models/financial-plan-model";
 
 export const createPayment = async (request: Request, response: Response) => {
   const {
@@ -19,7 +19,6 @@ export const createPayment = async (request: Request, response: Response) => {
     paymentMonthReference,
     schoolYearId,
   } = request.body;
-  console.log("Dados recebidos para criar pagamento:", request.body);
 
   // Verificação dos campos obrigatórios
   if (!enrollmentId || !amount || !centerId) {
@@ -69,26 +68,66 @@ export const getPayments = async (request: Request, response: Response) => {
     const page = parseInt(request.query.page as string) || 1;
     const limit = Number(process.env.queryLimit) as number;
     const skip = (page - 1) * limit;
+
     const totalPayments = await PaymentModel.countDocuments({ centerId });
 
+    // 1. Busca os pagamentos
     const payments = await PaymentModel.find({ centerId })
       .skip(skip)
       .limit(limit)
       .sort({
-        dueDate: -1,
+        paymentDate: -1,
       })
       .populate({
         path: "enrollmentId",
+        select: "studentId",
         populate: {
           path: "studentId",
+          select: "name studentCode",
         },
-      });
-    payments
-      ? response
-          .status(200)
-          .json({ payments, totalPayments: Math.ceil(totalPayments / limit) })
-      : response.status(404).json(null);
+      })
+      .lean();
+
+    if (!payments || payments.length === 0) {
+      response.status(200).json({ payments: [], totalPayments: 0 });
+      return;
+    }
+
+    const paymentIds = payments.map((p) => p._id);
+
+    const financialPlans = await FinancialPlanModel.find({
+      linkedPayment: { $in: paymentIds },
+      centerId,
+      status: "paid",
+    }).select("month year linkedPayment");
+
+    const financialPlanMap = new Map(); //TODO: Estudar melhor os MAPs em JS
+    financialPlans.forEach((fp) => {
+      const linkedPaymentId = String(fp.linkedPayment);
+
+      if (linkedPaymentId) {
+        financialPlanMap.set(linkedPaymentId, {
+          month: fp.month,
+          year: fp.year,
+        });
+      }
+    });
+
+    const paymentsWithReference = payments.map((payment) => {
+      const reference = financialPlanMap.get(String(payment._id));
+      return {
+        ...payment,
+        paymentMonthReference: reference ? reference.month : "N/D",
+        paymentYearReference: reference ? reference.year : "N/D",
+      };
+    });
+
+    response.status(200).json({
+      payments: paymentsWithReference,
+      totalPayments: Math.ceil(totalPayments / limit),
+    });
   } catch (error) {
+    console.error(error);
     response.status(500).json(error);
   }
 };

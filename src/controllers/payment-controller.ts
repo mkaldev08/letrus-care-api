@@ -101,7 +101,7 @@ export const getPayments = async (request: Request, response: Response) => {
       status: "paid",
     }).select("month year linkedPayment");
 
-    const financialPlanMap = new Map(); //TODO: Estudar melhor os MAPs em JS
+    const financialPlanMap = new Map(); //TODO: Estudar melhor os Maps em JS
     financialPlans.forEach((fp) => {
       const linkedPaymentId = String(fp.linkedPayment);
 
@@ -305,12 +305,12 @@ export const searchPayments = async (request: Request, response: Response) => {
       });
     payments
       ? response.status(200).json({
-          payments,
-          totalPayments:
-            Math.ceil(totalPayments / limit) !== 0
-              ? Math.ceil(totalPayments / limit)
-              : 1,
-        })
+        payments,
+        totalPayments:
+          Math.ceil(totalPayments / limit) !== 0
+            ? Math.ceil(totalPayments / limit)
+            : 1,
+      })
       : response.status(404).json(null);
   } catch (error) {
     response.status(500).json({ message: "Erro ao buscar pagamentos", error });

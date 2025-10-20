@@ -47,11 +47,7 @@ export async function generateFinancialPlan(
     );
 
     for (const resultMonth of months) {
-      //coloca a data do proximo pagamento no dia 10 do proximo mes e se for dezembro, coloca em janeiro do outro ano
-      const dueDate =
-        resultMonth.monthInNumber === 11
-          ? new Date(resultMonth.year + 1, 0, 10)
-          : new Date(resultMonth.year, resultMonth.monthInNumber + 1, 10);
+      const dueDate = new Date(resultMonth.year, resultMonth.monthInNumber, 10);
 
       await FinancialPlanModel.create({
         schoolYear: schoolYear._id,
@@ -120,7 +116,6 @@ export async function updateFinancialPlanStatus(
     if (!result) {
       throw new Error("Plano financeiro não encontrado ou já pago.");
     }
-    console.log("Plano financeiro encontrado para atualização:", result);
 
     await FinancialPlanModel.updateOne(
       { _id: result._id },

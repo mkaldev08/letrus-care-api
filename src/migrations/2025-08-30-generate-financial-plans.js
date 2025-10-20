@@ -65,10 +65,7 @@ async function runMigration() {
 
     for (const resultMonth of months) {
       //coloca a data do proximo pagamento no dia 10 do proximo mes e se for dezembro, coloca em janeiro do outro ano
-      const dueDate =
-        resultMonth.monthInNumber === 11
-          ? new Date(resultMonth.year + 1, 0, 10)
-          : new Date(resultMonth.year, resultMonth.monthInNumber + 1, 10);
+      const dueDate = new Date(resultMonth.year, resultMonth.monthInNumber, 10);
 
       await FinancialPlanCollection.insertOne({
         schoolYear: schoolYear._id,
@@ -79,6 +76,7 @@ async function runMigration() {
         centerId: enrollment.centerId,
         userId: enrollment.userId,
         tutionFee: courseDoc.fee,
+        status: "pending",
       });
 
       console.log(

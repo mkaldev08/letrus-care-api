@@ -130,7 +130,7 @@ async function migratePaymentsToFinancialPlan() {
             _id: classDoc?.course,
           });
 
-          const tutionFee = courseDoc.fee;
+          const tutionFee = courseDoc?.fee;
 
           // Calcula a data de vencimento (10º dia do MÊS SEGUINTE ao de referência)
           const monthNumber = monthNameToNumber[paymentMonthReference];

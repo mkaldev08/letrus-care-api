@@ -167,7 +167,7 @@ export const getInactivePayments = async (
 export const getPayment = async (request: Request, response: Response) => {
   const { id } = request.params;
   try {
-    const payment = await PaymentModel.findById(id)
+    const paymentForShow = await PaymentModel.findById(id)
       .populate({
         path: "enrollmentId",
         populate: {
@@ -182,10 +182,22 @@ export const getPayment = async (request: Request, response: Response) => {
         },
       })
       .populate("userId");
+
+    if (!paymentForShow) {
+      response.status(404).json(null);
+      return;
+    }
+    const financialPlanReference = await FinancialPlanModel.findOne({ linkedPayment: paymentForShow?._id }).select("month year");
+
     const receipt = await ReceiptModel.findOne({ paymentId: id });
-    payment
-      ? response.status(200).json({ payment, receipt })
-      : response.status(404).json(null);
+
+    response.status(200).json({
+      payment: {
+        ...paymentForShow.toObject(),
+        paymentMonthReference: financialPlanReference ? financialPlanReference.month : "N/D",
+        paymentYearReference: financialPlanReference ? financialPlanReference.year : "N/D"
+      }, receipt
+    });
   } catch (error) {
     response.status(500).json(error);
   }

@@ -11,6 +11,7 @@ export interface IStudent extends Document {
   centerId: Schema.Types.ObjectId;
   endStudiedDate: Date;
   studentCode: string;
+  identityNumber?: string;
 }
 
 const studentSchema = new Schema<IStudent>({
@@ -30,6 +31,7 @@ const studentSchema = new Schema<IStudent>({
   endStudiedDate: { type: Date, default: null },
   centerId: { type: Schema.Types.ObjectId, ref: "Center", required: true },
   studentCode: { type: String, required: true, unique: true },
+  identityNumber: { type: String, required: true, unique: true, },
 });
 
 // criação de índice de texto
@@ -37,6 +39,7 @@ studentSchema.index({
   "name.surname": "text",
   "name.fullName": "text",
   studentCode: "text",
+  identityNumber: "text",
 });
 
 export const StudentModel = model<IStudent>("Student", studentSchema);

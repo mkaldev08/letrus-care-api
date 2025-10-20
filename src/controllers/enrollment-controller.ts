@@ -17,6 +17,7 @@ export const createEnrollment = async (
     hasScholarShip,
     centerId,
     userId,
+
   } = request.body;
 
   const enrollment: IEnrollment = new EnrollmentModel({
@@ -79,9 +80,9 @@ export const getEnrollments = async (request: Request, response: Response) => {
       });
     enrollments
       ? response.status(200).json({
-          enrollments,
-          totalEnrollments: Math.ceil(totalEnrollments / limit),
-        })
+        enrollments,
+        totalEnrollments: Math.ceil(totalEnrollments / limit),
+      })
       : response.status(404).json(null);
   } catch (error) {
     response.status(500).json(error);
@@ -259,12 +260,12 @@ export const searchEnrollments = async (
       });
     enrollments
       ? response.status(200).json({
-          enrollments,
-          totalEnrollments:
-            Math.ceil(totalEnrollments / limit) !== 0
-              ? Math.ceil(totalEnrollments / limit)
-              : 1,
-        })
+        enrollments,
+        totalEnrollments:
+          Math.ceil(totalEnrollments / limit) !== 0
+            ? Math.ceil(totalEnrollments / limit)
+            : 1,
+      })
       : response.status(404).json(null);
   } catch (error) {
     response

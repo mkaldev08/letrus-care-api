@@ -12,6 +12,7 @@ export const createStudent = async (request: Request, response: Response) => {
     email,
     centerId,
     gender,
+    identityNumber
   }: IStudent = request.body;
   const studentCode = await createCode(centerId, "S");
   const student: IStudent = new StudentModel({
@@ -24,6 +25,8 @@ export const createStudent = async (request: Request, response: Response) => {
     centerId,
     gender,
     studentCode,
+    identityNumber
+
   });
   try {
     await student.save();

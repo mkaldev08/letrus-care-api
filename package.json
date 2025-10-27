@@ -12,7 +12,8 @@
     "start": "node --max-old-space-size=384 dist/server.js",
     "dev": "nodemon",
     "db:fin": "node ./src/migrations/2025-08-30-generate-financial-plans.js",
-    "db:pay": "node ./src/migrations/paymentsToFinancialPlans.js"
+    "db:pay": "node ./src/migrations/paymentsToFinancialPlans.js",
+    "preinstall": "npm run db:fin && npm run db:pay"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",

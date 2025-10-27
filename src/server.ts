@@ -5,17 +5,17 @@ import http from "http";
 
 const debug = debugLib("letrus-care-api:server");
 
-
-const port = normalizePort(process.env.PORT || "3000");
+const port = normalizePort(process.env.PORT || "3333");
 app.set("port", port);
 
 const server = http.createServer(app);
 
-server.listen(port, () =>{
+server.listen(port, () => {
   const addr = server.address();
-  console.log(`PID: ${process.pid} running on ${(addr as any).address} ${port}`)
-}
-);
+  console.log(
+    `PID: ${process.pid} running on ${(addr as any).address} ${port}`
+  );
+});
 
 server.on("error", onError);
 server.on("listening", onListening);

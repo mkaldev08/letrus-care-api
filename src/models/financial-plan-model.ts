@@ -9,8 +9,7 @@ export interface IFinancialPlan extends Document {
   userId: Schema.Types.ObjectId;
   status: "paid" | "pending" | "overdue";
   dueDate: Date;
-  amount: number;
-  lateFee: number;
+  tutionFee: number;
   linkedPayment?: Schema.Types.ObjectId;
 }
 
@@ -35,9 +34,8 @@ const financialPlanSchema = new Schema<IFinancialPlan>({
     default: "pending",
   },
   dueDate: { type: Date, required: true },
-  amount: { type: Number, required: true },
-  lateFee: { type: Number, default: 0 },
-  linkedPayment: { type: Schema.Types.ObjectId, ref: "Payment" },
+  tutionFee: { type: Number, required: true },
+  linkedPayment: { type: Schema.Types.ObjectId, ref: "Payment", default: null },
 });
 
 export const FinancialPlanModel = model<IFinancialPlan>(

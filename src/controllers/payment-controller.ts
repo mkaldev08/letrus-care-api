@@ -4,22 +4,24 @@ import { IReceipt, ReceiptModel } from "../models/payments_receipt";
 import { createCode } from "../utils/generate-code";
 import { StudentModel } from "../models/student-model";
 import { EnrollmentModel } from "../models/enrollment-model";
+import { updateFinancialPlanStatus } from "./financialPlans-controller";
+import { FinancialPlanModel } from "../models/financial-plan-model";
 
 export const createPayment = async (request: Request, response: Response) => {
   const {
     enrollmentId,
     amount,
     paymentDate,
-    paymentMonthReference,
-    paymentYearReference,
     paymentMethod,
     centerId,
     userId,
     lateFee,
+    paymentMonthReference,
+    schoolYearId,
   } = request.body;
 
   // Verificação dos campos obrigatórios
-  if (!enrollmentId || !amount || !paymentMonthReference || !centerId) {
+  if (!enrollmentId || !amount || !centerId) {
     response.status(400).json({ error: "Campos obrigatórios faltando" });
     return;
   }
@@ -28,8 +30,6 @@ export const createPayment = async (request: Request, response: Response) => {
     enrollmentId,
     amount,
     paymentDate,
-    paymentMonthReference,
-    paymentYearReference,
     paymentMethod,
     centerId,
     userId,
@@ -37,7 +37,6 @@ export const createPayment = async (request: Request, response: Response) => {
   });
 
   try {
-    await payment.save();
     const receiptCode = await createCode(centerId, "P");
     const partCode = Date.now().toString();
 
@@ -46,7 +45,16 @@ export const createPayment = async (request: Request, response: Response) => {
       receiptNumber: receiptCode + partCode.slice(0, 3),
     });
 
+    //actualiza o plano financeiro depois de pagar e ter o recibo
+    await updateFinancialPlanStatus("paid", payment._id as string, {
+      monthReference: paymentMonthReference,
+      enrollmentId: String(enrollmentId),
+      schoolYearId,
+    });
+
+    await payment.save();
     await receipt.save();
+
     response.status(201).json({ payment, receipt });
   } catch (error) {
     console.error("Erro ao criar pagamento:", error);
@@ -60,26 +68,66 @@ export const getPayments = async (request: Request, response: Response) => {
     const page = parseInt(request.query.page as string) || 1;
     const limit = Number(process.env.queryLimit) as number;
     const skip = (page - 1) * limit;
+
     const totalPayments = await PaymentModel.countDocuments({ centerId });
 
+    // 1. Busca os pagamentos
     const payments = await PaymentModel.find({ centerId })
       .skip(skip)
       .limit(limit)
       .sort({
-        dueDate: -1,
+        paymentDate: -1,
       })
       .populate({
         path: "enrollmentId",
+        select: "studentId",
         populate: {
           path: "studentId",
+          select: "name studentCode",
         },
-      });
-    payments
-      ? response
-          .status(200)
-          .json({ payments, totalPayments: Math.ceil(totalPayments / limit) })
-      : response.status(404).json(null);
+      })
+      .lean();
+
+    if (!payments || payments.length === 0) {
+      response.status(200).json({ payments: [], totalPayments: 0 });
+      return;
+    }
+
+    const paymentIds = payments.map((p) => p._id);
+
+    const financialPlans = await FinancialPlanModel.find({
+      linkedPayment: { $in: paymentIds },
+      centerId,
+      status: "paid",
+    }).select("month year linkedPayment");
+
+    const financialPlanMap = new Map(); //TODO: Estudar melhor os Maps em JS
+    financialPlans.forEach((fp) => {
+      const linkedPaymentId = String(fp.linkedPayment);
+
+      if (linkedPaymentId) {
+        financialPlanMap.set(linkedPaymentId, {
+          month: fp.month,
+          year: fp.year,
+        });
+      }
+    });
+
+    const paymentsWithReference = payments.map((payment) => {
+      const reference = financialPlanMap.get(String(payment._id));
+      return {
+        ...payment,
+        paymentMonthReference: reference ? reference.month : "N/D",
+        paymentYearReference: reference ? reference.year : "N/D",
+      };
+    });
+
+    response.status(200).json({
+      payments: paymentsWithReference,
+      totalPayments: Math.ceil(totalPayments / limit),
+    });
   } catch (error) {
+    console.error(error);
     response.status(500).json(error);
   }
 };
@@ -119,7 +167,7 @@ export const getInactivePayments = async (
 export const getPayment = async (request: Request, response: Response) => {
   const { id } = request.params;
   try {
-    const payment = await PaymentModel.findById(id)
+    const paymentForShow = await PaymentModel.findById(id)
       .populate({
         path: "enrollmentId",
         populate: {
@@ -134,10 +182,22 @@ export const getPayment = async (request: Request, response: Response) => {
         },
       })
       .populate("userId");
+
+    if (!paymentForShow) {
+      response.status(404).json(null);
+      return;
+    }
+    const financialPlanReference = await FinancialPlanModel.findOne({ linkedPayment: paymentForShow?._id }).select("month year");
+
     const receipt = await ReceiptModel.findOne({ paymentId: id });
-    payment
-      ? response.status(200).json({ payment, receipt })
-      : response.status(404).json(null);
+
+    response.status(200).json({
+      payment: {
+        ...paymentForShow.toObject(),
+        paymentMonthReference: financialPlanReference ? financialPlanReference.month : "N/D",
+        paymentYearReference: financialPlanReference ? financialPlanReference.year : "N/D"
+      }, receipt
+    });
   } catch (error) {
     response.status(500).json(error);
   }
@@ -146,11 +206,10 @@ export const getPayment = async (request: Request, response: Response) => {
 export const editPayment = async (request: Request, response: Response) => {
   const { id } = request.params;
 
-  const { paymentMethod, amount, paymentDate, paymentMonthReference } =
-    request.body;
+  const { paymentMethod, amount, paymentDate } = request.body;
   try {
     // Verificação dos campos obrigatórios
-    if (!amount || !paymentMonthReference) {
+    if (!amount || !paymentDate || !paymentMethod) {
       response.status(400).json({ error: "Campos obrigatórios faltando" });
     }
     const payment = await PaymentModel.findOneAndUpdate(
@@ -159,7 +218,6 @@ export const editPayment = async (request: Request, response: Response) => {
         $set: {
           amount,
           paymentDate,
-          paymentMonthReference,
           paymentMethod,
         },
       },
@@ -234,21 +292,38 @@ export const searchPayments = async (request: Request, response: Response) => {
     const enrollmentIds = enrollments.map((e) => e._id);
 
     // Buscar pagamentos ligados a esses estudantes
+    const page = parseInt(request.query.page as string) || 1;
+    const limit = Number(process.env.queryLimit) as number;
+    const skip = (page - 1) * limit;
+    const totalPayments = await PaymentModel.countDocuments({
+      centerId,
+      enrollmentId: { $in: enrollmentIds },
+    });
+
     const payments = await PaymentModel.find({
       centerId,
       enrollmentId: { $in: enrollmentIds },
     })
+      .skip(skip)
+      .limit(limit)
+      .sort({
+        dueDate: -1,
+      })
       .populate({
         path: "enrollmentId",
         populate: {
           path: "studentId",
         },
-      })
-      .sort({
-        paymentDate: -1,
       });
-
-    response.json(payments);
+    payments
+      ? response.status(200).json({
+        payments,
+        totalPayments:
+          Math.ceil(totalPayments / limit) !== 0
+            ? Math.ceil(totalPayments / limit)
+            : 1,
+      })
+      : response.status(404).json(null);
   } catch (error) {
     response.status(500).json({ message: "Erro ao buscar pagamentos", error });
   }

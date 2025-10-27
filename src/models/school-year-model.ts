@@ -18,8 +18,12 @@ const schoolYearSchema = new Schema<ISchoolYear>({
   startDate: { type: Date, default: Date.now() },
   endDate: { type: Date, required: true },
   isCurrent: { type: Boolean, default: false },
-  center: { type: Schema.Types.ObjectId, ref: "Center", required: true }
+  center: { type: Schema.Types.ObjectId, ref: "Center", required: true },
 });
+
+//TODO:Estudar (Validação única por centro (mongoose index))
+
+schoolYearSchema.index({ description: 1, center: 1 }, { unique: true });
 
 export const SchoolYearModel = model<ISchoolYear>(
   "SchoolYear",

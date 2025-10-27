@@ -9,10 +9,11 @@
   },
   "scripts": {
     "build": "npm install --include=dev && tsc --sourceMap false",
-    "start": "node --max-old-space-size=384 dist/index.js",
+    "start": "node dist/server.js",
     "dev": "nodemon",
-    "db:migrate": "node ./src/migrations/2025-08-10-migrate-course-grade-to-classId.js",
-    "postinstall": "npm run db:migrate"
+    "db:fin": "node ./src/migrations/2025-08-30-generate-financial-plans.js",
+    "db:pay": "node ./src/migrations/paymentsToFinancialPlans.js",
+    "preinstall": "npm run db:fin && npm run db:pay"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",

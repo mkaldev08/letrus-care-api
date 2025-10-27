@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { ISchoolYear, SchoolYearModel } from "../models/school-year";
+import { ISchoolYear, SchoolYearModel } from "../models/school-year-model";
 
 export const createSchoolYear = async (
   request: Request,

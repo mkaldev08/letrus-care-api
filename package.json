@@ -8,7 +8,7 @@
     "email": "pedrokalueca@gmail.com"
   },
   "scripts": {
-    "setup": "npm install && npm run db:fin && npm run db:pay && npm run build",
+    "setup": "npm run build",
     "build": "npm install --include=dev && tsc --sourceMap false",
     "start": "node dist/server.js",
     "dev": "nodemon",

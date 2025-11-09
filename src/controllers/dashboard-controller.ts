@@ -58,7 +58,6 @@ export const getDashboard = async (request: Request, response: Response) => {
       status: { $eq: "enrolled" },
     });
 
-    // TODO: improve the logic to calculate overdue fees based on dueDate and status on Financial Plan
     const totalOverdueFee = await FinancialPlanModel.countDocuments({
       centerId,
       status: { $eq: "overdue" },

@@ -126,4 +126,3 @@ export async function updateFinancialPlanStatus(
     throw new Error("Erro ao atualizar o plano financeiro: " + error);
   }
 }
-//TODO: implementar actualizacao automatica do estado "overdue" em todos planos quando chegar a data de vencimento cadastrada

@@ -4,8 +4,7 @@ import { subDays, endOfDay } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 
 const LUANDA_TZ = "Africa/Luanda";
-//const cronTrigger = "0 0 11 * *";
-const cronTrigger = "*/30 * * * * *";
+const cronTrigger = "0 0 11 * *";
 
 /**
  * @function changeOverDueStatus

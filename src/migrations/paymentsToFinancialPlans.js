@@ -99,9 +99,6 @@ async function migratePaymentsToFinancialPlan() {
         });
 
         if (!foundPlan) {
-          // ===================================
-          // TODO: Criar FinancialPlan se não existir
-          // ===================================
           console.warn(
             `[Criando] FinancialPlan ausente para: Enrolment ${enrollmentId}, Mês: ${paymentMonthReference}, Ano: ${paymentYearReference}`
           );

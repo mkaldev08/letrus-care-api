@@ -6,6 +6,7 @@ import { getMonthsBetween } from "../utils/getMonth-in-school-year";
 import { ClassModel } from "../models/class-model";
 import { CourseModel } from "../models/course-model";
 import mongoose from "mongoose";
+import '../utils/change-financial-overdue-state'
 
 export async function generateFinancialPlan(
   centerId: string,

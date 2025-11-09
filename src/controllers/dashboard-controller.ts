@@ -5,6 +5,7 @@ import { PaymentModel } from "../models/payment-model";
 import { TeacherModel } from "../models/teacher-model";
 import { AttendanceModel } from "../models/attendance-model";
 import mongoose from "mongoose";
+import { FinancialPlanModel } from "../models/financial-plan-model";
 
 type StudentGrowth = { month: string; students: number }[];
 type PaymentGrowthTopFive = { month: string; totalAmount: string }[];
@@ -57,10 +58,10 @@ export const getDashboard = async (request: Request, response: Response) => {
       status: { $eq: "enrolled" },
     });
 
-    const totalOverdueFee = await PaymentModel.countDocuments({
+    // TODO: improve the logic to calculate overdue fees based on dueDate and status on Financial Plan
+    const totalOverdueFee = await FinancialPlanModel.countDocuments({
       centerId,
-      // status: { $eq: "overdue" },
-      dueDate: { $lt: endOfDay },
+      status: { $eq: "overdue" },
     });
 
     const totalActiveTeachers = await TeacherModel.countDocuments({
@@ -87,10 +88,10 @@ export const getDashboard = async (request: Request, response: Response) => {
 
     const totalDailyAbsent = classIds.length
       ? await AttendanceModel.countDocuments({
-          classId: { $in: classIds },
-          status: "absent",
-          date: { $gte: startOfDay, $lt: endOfDay },
-        })
+        classId: { $in: classIds },
+        status: "absent",
+        date: { $gte: startOfDay, $lt: endOfDay },
+      })
       : 0;
 
     // Student growth in the last 5 months (including the current month)

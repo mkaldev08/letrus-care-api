@@ -164,3 +164,43 @@ export const getDashboard = async (request: Request, response: Response) => {
     });
   }
 };
+
+
+export const getOverduePayments = async (request: Request, response: Response) => {
+  try {
+    const { centerId } = request.params;
+    const page = parseInt(request.query.page as string) || 1;
+    const limit = parseInt(request.query.limit as string) || parseInt(process.env.queryLimit as string) || 10;
+    const skip = (page - 1) * limit;
+
+    const totalOverdueFee = await FinancialPlanModel.find({
+      centerId,
+      status: { $eq: "overdue" },
+    })
+      .populate({
+        path: "enrollmentId", select: "classId studentId",
+        populate: [
+          { path: "classId", select: "className" },
+          { path: "studentId", select: "name studentCode" }
+        ]
+      })
+
+      .skip(skip)
+      .limit(limit)
+      .sort({ year: -1, month: -1 });
+
+    const total = await FinancialPlanModel.countDocuments({
+      centerId,
+      status: { $eq: "overdue" },
+    });
+
+    response.status(200).json({ overduePayments: totalOverdueFee, total });
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') console.error(error);
+    if (error instanceof Error) {
+      response.status(500).json({ message: error.message });
+    } else {
+      response.status(500).json({ message: "Internal server error" });
+    }
+  }
+}

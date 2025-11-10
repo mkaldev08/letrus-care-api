@@ -30,7 +30,7 @@ type cookieOptionsType = {
 const cookieOptions: cookieOptionsType = {
   httpOnly: true,
   secure: Boolean(process.env.SECURE_ON_COOKIE as string), // true em "production"
-  sameSite: (process.env.SAME_SITE as cookieOptionsType["sameSite"]) || "lax",
+  sameSite: (process.env.SAME_SITE as cookieOptionsType["sameSite"]),
 };
 
 export const loginAccount = async (request: Request, response: Response) => {

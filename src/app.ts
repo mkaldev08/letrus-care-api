@@ -27,26 +27,14 @@ import { healthCheckRouter } from "./routes/health-check-router";
 
 const app: Application = express();
 
-const allowedOrigins = [
-  process.env.APP_URL1,
-  process.env.APP_URL2,
-] as string[];
-
-app.use(cors({ credentials: true, origin: allowedOrigins }));
+app.use(cors({ credentials: true, origin: String(process.env.APP_URL) }));
 
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.disable("x-powered-by");
 
-// Cookie parser só quando necessário
-app.use((req, res, next) => {
-  if (req.headers.cookie) {
-    cookieParser()(req, res, next);
-  } else {
-    next();
-  }
-});
+app.use(cookieParser());
 
 const options = {
   failOnErrors: true, // 500

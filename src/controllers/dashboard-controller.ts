@@ -194,7 +194,35 @@ export const getOverduePayments = async (request: Request, response: Response) =
       status: { $eq: "overdue" },
     });
 
-    response.status(200).json({ overduePayments: totalOverdueFee, total });
+    response.status(200).json({ overduePayments: totalOverdueFee, total: total / limit });
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') console.error(error);
+    if (error instanceof Error) {
+      response.status(500).json({ message: error.message });
+    } else {
+      response.status(500).json({ message: "Internal server error" });
+    }
+  }
+}
+
+export const getOverduePaymentsWithoutLimitePerPage = async (request: Request, response: Response) => {
+  try {
+    const { centerId } = request.params;
+
+    const totalOverdueFee = await FinancialPlanModel.find({
+      centerId,
+      status: { $eq: "overdue" },
+    })
+      .populate({
+        path: "enrollmentId", select: "classId studentId",
+        populate: [
+          { path: "classId", select: "className" },
+          { path: "studentId", select: "name studentCode" }
+        ]
+      })
+      .sort({ year: -1, month: -1 });
+
+    response.status(200).json(totalOverdueFee);
   } catch (error) {
     if (process.env.NODE_ENV === 'development') console.error(error);
     if (error instanceof Error) {

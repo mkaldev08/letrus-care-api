@@ -194,7 +194,7 @@ export const getOverduePayments = async (request: Request, response: Response) =
       status: { $eq: "overdue" },
     });
 
-    response.status(200).json({ overduePayments: totalOverdueFee, total: total / limit });
+    response.status(200).json({ overduePayments: totalOverdueFee, total: Math.floor(total / limit) });
   } catch (error) {
     if (process.env.NODE_ENV === 'development') console.error(error);
     if (error instanceof Error) {

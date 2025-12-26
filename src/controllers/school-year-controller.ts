@@ -47,7 +47,7 @@ export const getSchoolYears = async (request: Request, response: Response) => {
   } catch (error) {
     response
       .status(500)
-      .json("Occorreu algum erro ao buscar anos lectivos paginados");
+      .json("Ocorreu algum erro ao buscar anos letivos paginados");
   }
 };
 
@@ -63,7 +63,7 @@ export const getSchoolYearsNoLimited = async (
     });
     response.status(200).json(schoolYears);
   } catch (error) {
-    response.status(500).json("Occorreu algum erro ao buscar anos lectivos");
+    response.status(500).json("Ocorreu algum erro ao buscar anos letivos");
   }
 };
 
@@ -76,7 +76,7 @@ export const getSchoolYearById = async (
     const schoolYear = await SchoolYearModel.findById(id);
     response.status(200).json(schoolYear);
   } catch (error) {
-    response.status(500).json("Occorreu algum erro ao buscar ano lectivo");
+    response.status(500).json("Ocorreu algum erro ao buscar ano letivo por ID");
   }
 };
 
@@ -92,21 +92,22 @@ export const getCurrentSchoolYear = async (
     });
     response.status(200).json(schoolYear);
   } catch (error) {
-    response.status(500).json("Occorreu algum erro ao buscar ano lectivo");
+    response.status(500).json("Ocorreu algum erro ao buscar ano letivo atual");
   }
 };
 
 export const editSchoolYear = async (request: Request, response: Response) => {
   try {
     const { id } = request.params;
-    const { description, startDate, endDate }: ISchoolYear = request.body;
-    const schoolYear = SchoolYearModel.findOneAndUpdate(
+    const { description, startDate, endDate, isCurrent }: ISchoolYear = request.body;
+    const schoolYear = await SchoolYearModel.findOneAndUpdate(
       { _id: id },
       {
         $set: {
           description,
           startDate,
           endDate,
+          isCurrent,
         },
       },
       { $upsert: true, new: true }
@@ -114,6 +115,7 @@ export const editSchoolYear = async (request: Request, response: Response) => {
 
     response.status(200).json(schoolYear);
   } catch (error) {
-    response.status(500).json("Occorreu algum erro ao editar ano lectivo");
+    console.log(error)
+    response.status(500).json("Ocorreu algum erro ao editar ano letivo");
   }
 };

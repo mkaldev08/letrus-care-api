@@ -39,11 +39,11 @@ export const loginAccount = async (request: Request, response: Response) => {
     let user: IUser | null = await UserModel.findOne({ username });
 
     if (!user) {
-      response.status(401).json({ error: "Verifica o username" });
+      response.status(401).json({ error: "Verifica os dados de acesso, tente novamente!" });
     } else {
       const same = await isCorrectHashedData(password, user.password);
       if (!same) {
-        response.status(401).json({ error: "Verifica a senha" });
+        response.status(401).json({ error: "Verifica os dados de acesso, tente novamente!" });
       } else {
         const secret = process.env.JWT_TOKEN;
         if (!secret) {

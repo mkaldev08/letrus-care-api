@@ -12,6 +12,7 @@ export interface IStudent extends Document {
   endStudiedDate: Date;
   studentCode: string;
   identityNumber?: string;
+  status: "active" | "inactive";
 }
 
 const studentSchema = new Schema<IStudent>({
@@ -32,6 +33,7 @@ const studentSchema = new Schema<IStudent>({
   centerId: { type: Schema.Types.ObjectId, ref: "Center", required: true },
   studentCode: { type: String, required: true, unique: true },
   identityNumber: { type: String, required: true, unique: true, },
+  status: { type: String, enum: ["active", "inactive"], default: "active" },
 });
 
 // criação de índice de texto

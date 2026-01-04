@@ -40,10 +40,11 @@ export const createClass = async (request: Request, response: Response) => {
 };
 
 export const getClasses = async (request: Request, response: Response) => {
-  const { centerId } = request.params;
+  const { centerId, schoolYearId } = request.params;
   try {
     const classesInCenter = await ClassModel.find({
       center: centerId,
+      schoolYear:schoolYearId,
       status: "active",
     })
       .sort({

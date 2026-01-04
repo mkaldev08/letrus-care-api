@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { StudentModel, IStudent } from "../models/student-model";
 import { createCode } from "../utils/generate-code";
+import dotenv from "dotenv"
+dotenv.config();
 
 export const createStudent = async (request: Request, response: Response) => {
   const {
@@ -37,9 +39,52 @@ export const createStudent = async (request: Request, response: Response) => {
   }
 };
 
+export const getStudentsWithPagination = async (request: Request, response: Response) => {
+  const { centerId } = request.params;
+  const { page } = request.query;
+
+  const pageNumber = parseInt(page as string, 10);
+  const limitNumber = parseInt(process.env.queryLimit as string, 10) || 10;
+
+  try {
+    const students = await StudentModel.find({
+      centerId
+    })
+      .sort({ "name.fullName": 1 })
+      .skip((pageNumber - 1) * limitNumber)
+      .limit(limitNumber);
+
+    const totalStudents = await StudentModel.countDocuments();
+
+    response.status(200).json({
+      students,
+      totalPages: Math.floor(totalStudents / limitNumber),
+    });
+  } catch (error) {
+    response.status(500).json(error);
+  }
+}
+
 export const getStudents = async (request: Request, response: Response) => {
   try {
     const students = await StudentModel.find().sort({
+      "name.fullName": 1,
+    });
+    students
+      ? response.status(200).json(students)
+      : response.status(404).json(null);
+  } catch (error) {
+    response.status(500).json(error);
+  }
+};
+
+export const getActiveStudents = async (request: Request, response: Response) => {
+  try {
+    const { centerId } = request.params;
+    const students = await StudentModel.find({
+      status: { $ne: "inactive" },
+      centerId,
+    }).sort({
       "name.fullName": 1,
     });
     students

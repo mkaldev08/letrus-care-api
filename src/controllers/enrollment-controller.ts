@@ -54,7 +54,7 @@ export const getEnrollments = async (request: Request, response: Response) => {
     const limit = Number(process.env.queryLimit) as number;
     const skip = (page - 1) * limit;
 
-    const { centerId } = request.params;
+    const { centerId, schoolYearId } = request.params;
 
     const totalEnrollments = await EnrollmentModel.countDocuments({
       centerId,

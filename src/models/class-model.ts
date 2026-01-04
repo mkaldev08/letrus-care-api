@@ -4,7 +4,7 @@ export interface IClass extends Document {
   course: Schema.Types.ObjectId;
   period: "morning" | "moon" | "evening";
   grade: Schema.Types.ObjectId;
-  students: Schema.Types.ObjectId[]; //pretendo remover atraves da redundacia,pois ja tenho classId em enrollment que tem studentId
+  students: Schema.Types.ObjectId[]; //pretendo remover atraves da redundancia,pois ja tenho classId em enrollment que tem studentId
   teachers: Schema.Types.ObjectId[];
   className: string;
   center: Schema.Types.ObjectId;

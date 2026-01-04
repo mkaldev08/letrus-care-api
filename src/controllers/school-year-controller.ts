@@ -115,7 +115,7 @@ export const editSchoolYear = async (request: Request, response: Response) => {
 
     response.status(200).json(schoolYear);
   } catch (error) {
-    console.log(error)
+    console.error(error)
     response.status(500).json("Ocorreu algum erro ao editar ano letivo");
   }
 };

@@ -46,6 +46,7 @@ export async function generateFinancialPlan(
         : enrollment.enrollmentDate,
       schoolYear.endDate
     );
+    console.log(months);
 
     for (const resultMonth of months) {
       const dueDate = new Date(resultMonth.year, resultMonth.monthInNumber, 10);
@@ -60,6 +61,7 @@ export async function generateFinancialPlan(
         userId: enrollment.userId,
         tutionFee: courseMatched.fee,
       });
+  
     }
   } catch (error) {
     console.log(error);

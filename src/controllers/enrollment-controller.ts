@@ -38,10 +38,15 @@ export const createEnrollment = async (
       receiptNumber: receiptCode + partCode.slice(0, 3),
     });
 
-    await enrollment.save();
-    await receipt.save();
+    await enrollment.save()
+    const enrollmentPopulated = await enrollment.populate({
+      path: "classId",
+      populate: [{ path: "course" }, { path: "grade", select: "grade" }],
+    });
     await generateFinancialPlan(centerId, enrollment._id as string);
-    response.status(201).json({ receipt, enrollment });
+    
+    await receipt.save();
+    response.status(201).json({ receipt, enrollment: enrollmentPopulated });
   } catch (error) {
     console.log(error);
     response.status(500).json(error);

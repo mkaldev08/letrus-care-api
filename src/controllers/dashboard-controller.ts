@@ -6,8 +6,9 @@ import { TeacherModel } from "../models/teacher-model";
 import { AttendanceModel } from "../models/attendance-model";
 import mongoose from "mongoose";
 import { FinancialPlanModel } from "../models/financial-plan-model";
+import { StudentModel } from "../models/student-model";
 
-type StudentGrowth = { month: string; students: number }[];
+type enrollmentGrowth = { month: string; students: number }[];
 type PaymentGrowthTopFive = { month: string; totalAmount: string }[];
 
 export const getDashboard = async (request: Request, response: Response) => {
@@ -49,13 +50,13 @@ export const getDashboard = async (request: Request, response: Response) => {
   try {
     const totalActiveClassRoom = await ClassModel.countDocuments({
       center: centerId,
-      schoolYear:schoolYearId,
+      schoolYear: schoolYearId,
       status: { $ne: "inactive" },
     });
 
-    const totalActiveStudent = await EnrollmentModel.countDocuments({
+    const totalActiveStudent = await StudentModel.countDocuments({
       centerId,
-      status: { $ne: "dropped" },
+      status: { $ne: "inactive" },
     });
 
     const totalIncompleteEnrollment = await EnrollmentModel.countDocuments({
@@ -64,7 +65,7 @@ export const getDashboard = async (request: Request, response: Response) => {
     });
 
     const totalOverdueFee = await FinancialPlanModel.countDocuments({
-      schoolYear:schoolYearId,
+      schoolYear: schoolYearId,
       centerId,
       status: { $eq: "overdue" },
     });
@@ -87,21 +88,22 @@ export const getDashboard = async (request: Request, response: Response) => {
     });
 
     // Primeiro, buscar os IDs das classes ativas
-    const classIds = await ClassModel.find({ center: centerId, schoolYear:schoolYearId }).distinct(
-      "_id"
-    );
+    const classIds = await ClassModel.find({
+      center: centerId,
+      schoolYear: schoolYearId,
+    }).distinct("_id");
 
     const totalDailyAbsent = classIds.length
       ? await AttendanceModel.countDocuments({
-        classId: { $in: classIds },
-        status: "absent",
-        date: { $gte: startOfDay, $lt: endOfDay },
-      })
+          classId: { $in: classIds },
+          status: "absent",
+          date: { $gte: startOfDay, $lt: endOfDay },
+        })
       : 0;
 
     // Student growth in the last 5 months (including the current month)
 
-    const studentGrowth: StudentGrowth = await EnrollmentModel.aggregate([
+    const enrollmentGrowth: enrollmentGrowth = await EnrollmentModel.aggregate([
       {
         $match: {
           centerId: new mongoose.Types.ObjectId(centerId),
@@ -112,11 +114,11 @@ export const getDashboard = async (request: Request, response: Response) => {
       {
         $group: {
           _id: { $dateToString: { format: "%Y-%m", date: "$enrollmentDate" } },
-          students: { $sum: 1 },
+          enrollments: { $sum: 1 },
         },
       },
       { $sort: { _id: 1 } },
-      { $project: { month: "$_id", students: 1, _id: 0 } }, // select the month and students
+      { $project: { month: "$_id", enrollments: 1, _id: 0 } }, // select the month and enrollments
     ]);
     // Payment growth in the last 5 months (including the current month)
     const paymentGrowthTopFive: PaymentGrowthTopFive =
@@ -150,7 +152,6 @@ export const getDashboard = async (request: Request, response: Response) => {
     // paymentGrowthTopFive.forEach((payment) => {
     //   payment.totalAmount = formatCurrency(Number(payment.totalAmount));
     // });
-
     response.json({
       totalActiveClassRoom,
       totalActiveStudent,
@@ -160,7 +161,7 @@ export const getDashboard = async (request: Request, response: Response) => {
       totalDailyPayment,
       totalActiveTeachers,
       totalDailyAbsent,
-      studentGrowth,
+      enrollmentGrowth,
       paymentGrowthTopFive,
     });
   } catch (error) {
@@ -171,25 +172,31 @@ export const getDashboard = async (request: Request, response: Response) => {
   }
 };
 
-
-export const getOverduePayments = async (request: Request, response: Response) => {
+export const getOverduePayments = async (
+  request: Request,
+  response: Response
+) => {
   try {
-    const { centerId,schoolYearId } = request.params;
+    const { centerId, schoolYearId } = request.params;
     const page = parseInt(request.query.page as string) || 1;
-    const limit = parseInt(request.query.limit as string) || parseInt(process.env.queryLimit as string) || 10;
+    const limit =
+      parseInt(request.query.limit as string) ||
+      parseInt(process.env.queryLimit as string) ||
+      10;
     const skip = (page - 1) * limit;
 
     const totalOverdueFee = await FinancialPlanModel.find({
       centerId,
-      schoolYear:schoolYearId,
+      schoolYear: schoolYearId,
       status: { $eq: "overdue" },
     })
       .populate({
-        path: "enrollmentId", select: "classId studentId",
+        path: "enrollmentId",
+        select: "classId studentId",
         populate: [
           { path: "classId", select: "className" },
-          { path: "studentId", select: "name studentCode" }
-        ]
+          { path: "studentId", select: "name studentCode" },
+        ],
       })
 
       .skip(skip)
@@ -197,47 +204,54 @@ export const getOverduePayments = async (request: Request, response: Response) =
       .sort({ year: -1, month: -1 });
 
     const total = await FinancialPlanModel.countDocuments({
-      schoolYear:schoolYearId,
+      schoolYear: schoolYearId,
       centerId,
       status: { $eq: "overdue" },
     });
 
-    response.status(200).json({ overduePayments: totalOverdueFee, total: Math.floor(total / limit) });
+    response.status(200).json({
+      overduePayments: totalOverdueFee,
+      total: Math.floor(total / limit),
+    });
   } catch (error) {
-    if (process.env.NODE_ENV === 'development') console.error(error);
+    if (process.env.NODE_ENV === "development") console.error(error);
     if (error instanceof Error) {
       response.status(500).json({ message: error.message });
     } else {
       response.status(500).json({ message: "Internal server error" });
     }
   }
-}
+};
 
-export const getOverduePaymentsWithoutLimitePerPage = async (request: Request, response: Response) => {
+export const getOverduePaymentsWithoutLimitePerPage = async (
+  request: Request,
+  response: Response
+) => {
   try {
-    const { centerId, schoolYearId} = request.params;
+    const { centerId, schoolYearId } = request.params;
 
     const totalOverdueFee = await FinancialPlanModel.find({
       centerId,
-      schoolYear:schoolYearId,
+      schoolYear: schoolYearId,
       status: { $eq: "overdue" },
     })
       .populate({
-        path: "enrollmentId", select: "classId studentId",
+        path: "enrollmentId",
+        select: "classId studentId",
         populate: [
           { path: "classId", select: "className" },
-          { path: "studentId", select: "name studentCode" }
-        ]
+          { path: "studentId", select: "name studentCode" },
+        ],
       })
       .sort({ year: -1, month: -1 });
 
     response.status(200).json(totalOverdueFee);
   } catch (error) {
-    if (process.env.NODE_ENV === 'development') console.error(error);
+    if (process.env.NODE_ENV === "development") console.error(error);
     if (error instanceof Error) {
       response.status(500).json({ message: error.message });
     } else {
       response.status(500).json({ message: "Internal server error" });
     }
   }
-}
+};

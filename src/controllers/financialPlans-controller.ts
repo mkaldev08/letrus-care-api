@@ -7,6 +7,7 @@ import { ClassModel } from "../models/class-model";
 import { CourseModel } from "../models/course-model";
 import mongoose from "mongoose";
 import '../utils/change-financial-overdue-state'
+import { TuitionFeeModel } from "../models/tuition-fee-model";
 
 export async function generateFinancialPlan(
   centerId: string,
@@ -39,6 +40,10 @@ export async function generateFinancialPlan(
     if (!courseMatched) {
       throw new Error("Curso não encontrado.");
     }
+    const tuitionFeeMatched = await TuitionFeeModel.findOne({ courseId: courseMatched._id });
+    if (!tuitionFeeMatched) {
+      throw new Error("Taxa de matrícula não encontrada.");
+    }
 
     const months = getMonthsBetween(
       enrollment.enrollmentDate < schoolYear.startDate
@@ -59,9 +64,9 @@ export async function generateFinancialPlan(
         enrollmentId: enrollment._id,
         centerId: enrollment.centerId,
         userId: enrollment.userId,
-        tutionFee: courseMatched.fee,
+        tutionFee: tuitionFeeMatched.fee,
       });
-  
+  ``
     }
   } catch (error) {
     console.log(error);

@@ -9,11 +9,13 @@
   },
   "scripts": {
     "setup": "npm run build",
+    "preinstall": "npm run db:course-to-tuition",
     "build": "npm install --include=dev && tsc --sourceMap false",
     "start": "node dist/server.js",
     "dev": "nodemon",
     "db:fin": "node ./src/migrations/2025-08-30-generate-financial-plans.js",
-    "db:pay": "node ./src/migrations/paymentsToFinancialPlans.js"
+    "db:pay": "node ./src/migrations/paymentsToFinancialPlans.js",
+    "db:course-to-tuition": "node ./src/migrations/migrate-course-fees-to-tuitionfees.js"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",

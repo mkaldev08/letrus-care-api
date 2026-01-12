@@ -4,6 +4,8 @@ import { createCode } from "../utils/generate-code";
 import { IEnrollmentReceipt, ReceiptModel } from "../models/enrollment_receipt";
 import { StudentModel } from "../models/student-model";
 import { generateFinancialPlan } from "./financialPlans-controller";
+import { TuitionFeeModel } from "../models/tuition-fee-model";
+import { Schema } from "mongoose";
 
 export const createEnrollment = async (
   request: Request,
@@ -17,7 +19,6 @@ export const createEnrollment = async (
     hasScholarShip,
     centerId,
     userId,
-
   } = request.body;
 
   const enrollment: IEnrollment = new EnrollmentModel({
@@ -38,13 +39,19 @@ export const createEnrollment = async (
       receiptNumber: receiptCode + partCode.slice(0, 3),
     });
 
-    await enrollment.save()
     const enrollmentPopulated = await enrollment.populate({
       path: "classId",
       populate: [{ path: "course" }, { path: "grade", select: "grade" }],
     });
+
+        const tuitionFee = await TuitionFeeModel.findOne(
+      { courseId: enrollmentPopulated.toObject().classId.course._id }
+    );
+    enrollment.tuitionFeeId = new Schema.Types.ObjectId(String(tuitionFee?._id));
+    await enrollment.save();
+
     await generateFinancialPlan(centerId, enrollment._id as string);
-    
+
     await receipt.save();
     response.status(201).json({ receipt, enrollment: enrollmentPopulated });
   } catch (error) {
@@ -59,7 +66,7 @@ export const getEnrollments = async (request: Request, response: Response) => {
     const limit = Number(process.env.queryLimit) as number;
     const skip = (page - 1) * limit;
 
-    const { centerId, schoolYearId } = request.params;
+    const { centerId } = request.params;
 
     const totalEnrollments = await EnrollmentModel.countDocuments({
       centerId,
@@ -85,9 +92,9 @@ export const getEnrollments = async (request: Request, response: Response) => {
       });
     enrollments
       ? response.status(200).json({
-        enrollments,
-        totalEnrollments: Math.ceil(totalEnrollments / limit),
-      })
+          enrollments,
+          totalEnrollments: Math.ceil(totalEnrollments / limit),
+        })
       : response.status(404).json(null);
   } catch (error) {
     response.status(500).json(error);
@@ -134,8 +141,9 @@ export const getEnrollment = async (request: Request, response: Response) => {
       .populate({
         path: "classId",
         populate: [
-          { path: "course", select: "name enrollmentFee" },
+          { path: "course", select: "name" },
           { path: "grade", select: "grade" },
+          {path:"tuitionFeeId" , select: "fee confirmationEnrollmentFee enrollmentFee" }
         ],
       })
       .populate("userId");
@@ -265,12 +273,12 @@ export const searchEnrollments = async (
       });
     enrollments
       ? response.status(200).json({
-        enrollments,
-        totalEnrollments:
-          Math.ceil(totalEnrollments / limit) !== 0
-            ? Math.ceil(totalEnrollments / limit)
-            : 1,
-      })
+          enrollments,
+          totalEnrollments:
+            Math.ceil(totalEnrollments / limit) !== 0
+              ? Math.ceil(totalEnrollments / limit)
+              : 1,
+        })
       : response.status(404).json(null);
   } catch (error) {
     response

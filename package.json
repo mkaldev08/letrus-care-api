@@ -9,7 +9,7 @@
   },
   "scripts": {
     "setup": "npm run build",
-    "preinstall": "npm run db:course-to-tuition",
+    "prebuild": "npm run db:course-to-tuition",
     "build": "npm install --include=dev && tsc --sourceMap false",
     "start": "node dist/server.js",
     "dev": "nodemon",

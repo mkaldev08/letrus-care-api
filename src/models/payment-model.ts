@@ -12,6 +12,7 @@ export interface IPayment extends Document {
   centerId: Schema.Types.ObjectId;
   userId: Schema.Types.ObjectId;
   lateFee: number;
+  obligationType: "enrollment" | "monthly" | "adjustment";
 }
 
 const paymentSchema = new Schema<IPayment>({
@@ -35,5 +36,9 @@ const paymentSchema = new Schema<IPayment>({
   },
   centerId: { type: Schema.Types.ObjectId, ref: "Center", required: true },
   userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+  obligationType: {
+    type: String,
+    enum: ["enrollment", "monthly", "adjustment"],
+  },
 });
 export const PaymentModel = model<IPayment>("Payment", paymentSchema);

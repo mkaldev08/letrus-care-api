@@ -12,7 +12,7 @@ export interface ITuitionFee extends Document{
 const tuitionFeeSchema = new Schema<ITuitionFee>({  
   fee: { type: Number, required: true },  
   feeFine: { type: Number, required: true },  
-  enrollmentFee: { type: Number, default: 0 },  
+  enrollmentFee: { type: Number, required: true},  
   courseId: { type: Schema.Types.ObjectId, ref: "Course", required: true },  
   confirmationEnrollmentFee: { type: Number, required: true },
   status: { type: String, enum: ["active", "inactive"], default: "active" }

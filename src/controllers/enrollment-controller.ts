@@ -4,7 +4,7 @@ import { createCode } from "../utils/generate-code";
 import { IEnrollmentReceipt, ReceiptModel } from "../models/enrollment_receipt";
 import { StudentModel } from "../models/student-model";
 import { generateFinancialPlan } from "./financialPlans-controller";
-import { TuitionFeeModel } from "../models/tuition-fee-model";
+import { ITuitionFee, TuitionFeeModel } from "../models/tuition-fee-model";
 import mongoose from "mongoose";
 import { IClass } from "../models/class-model";
 import { ICourse } from "../models/course-model";
@@ -373,3 +373,43 @@ export const searchEnrollments = async (
       .json({ message: "Erro ao pesquisar por inscricoes", error });
   }
 };
+
+export const getEnrollmentFinancialContext = async (
+  request: Request,
+  response: Response
+) => {
+  const { id } = request.params;
+
+  const enrollment = await EnrollmentModel
+    .findById(id)
+    .populate("tuitionFeeId");
+
+  if (!enrollment || !enrollment.tuitionFeeId) {
+    response.status(404).json(null);
+    return;
+  }
+
+  const hasPreviousEnrollment = await EnrollmentModel.exists({
+    studentId: enrollment.studentId,
+    centerId: enrollment.centerId,
+    enrollmentDate: { $lt: enrollment.enrollmentDate },
+  });
+
+  const tuitionFee = enrollment.tuitionFeeId as unknown as ITuitionFee;
+
+  if (!hasPreviousEnrollment) {
+    response.json({
+      type: "enrollment",
+      label: "Taxa de Inscrição",
+      amount: tuitionFee.enrollmentFee,
+    });
+    return;
+  }
+
+  response.json({
+    type: "confirmation",
+    label: "Taxa de Confirmação",
+    amount: tuitionFee.confirmationEnrollmentFee,
+  });
+};
+

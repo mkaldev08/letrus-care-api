@@ -8,6 +8,7 @@ import {
   getStudentsForAddOnClass,
   getEnrollments,
   searchEnrollments,
+  getEnrollmentFinancialContext,
 } from "../controllers/enrollment-controller";
 import { uploadDiskDocs } from "../config/multer";
 
@@ -23,6 +24,8 @@ enrollmentRouter.get("/:id", getEnrollment);
 enrollmentRouter.get("/student/:studentId", getEnrollmentByStudentId);
 enrollmentRouter.get("/add-class/:centerId", getStudentsForAddOnClass);
 enrollmentRouter.get("/search/:centerId", searchEnrollments);
+
+enrollmentRouter.get("/:id/financial-context", getEnrollmentFinancialContext);
 
 enrollmentRouter.put("/edit/:id", editEnrollment);
 enrollmentRouter.patch("/status/:id", changeStatus);

@@ -5,7 +5,7 @@ import { IEnrollmentReceipt, ReceiptModel } from "../models/enrollment_receipt";
 import { StudentModel } from "../models/student-model";
 import { generateFinancialPlan } from "./financialPlans-controller";
 import { TuitionFeeModel } from "../models/tuition-fee-model";
-import { Schema } from "mongoose";
+import mongoose from "mongoose";
 
 export const createEnrollment = async (
   request: Request,
@@ -44,10 +44,13 @@ export const createEnrollment = async (
       populate: [{ path: "course" }, { path: "grade", select: "grade" }],
     });
 
-        const tuitionFee = await TuitionFeeModel.findOne(
-      { courseId: enrollmentPopulated.toObject().classId.course._id }
+    const tuitionFee = await TuitionFeeModel.findOne({
+      courseId: enrollmentPopulated.toObject().classId.course?._id,
+    });
+    
+    enrollment.tuitionFeeId = new mongoose.Types.ObjectId(
+      String(tuitionFee?._id)
     );
-    enrollment.tuitionFeeId = new Schema.Types.ObjectId(String(tuitionFee?._id));
     await enrollment.save();
 
     await generateFinancialPlan(centerId, enrollment._id as string);
@@ -143,7 +146,10 @@ export const getEnrollment = async (request: Request, response: Response) => {
         populate: [
           { path: "course", select: "name" },
           { path: "grade", select: "grade" },
-          {path:"tuitionFeeId" , select: "fee confirmationEnrollmentFee enrollmentFee" }
+          {
+            path: "tuitionFeeId",
+            select: "fee confirmationEnrollmentFee enrollmentFee",
+          },
         ],
       })
       .populate("userId");

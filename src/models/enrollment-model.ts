@@ -11,6 +11,7 @@ export interface IEnrollment extends Document {
   centerId:Schema.Types.ObjectId;
   hasScholarShip: boolean;
   hasFinancialPlan: boolean
+  tuitionFeeId: Schema.Types.ObjectId;
 }
 
 const enrollmentSchema = new Schema<IEnrollment>({
@@ -27,7 +28,13 @@ const enrollmentSchema = new Schema<IEnrollment>({
   doc_file: { type: String },
   image_file: { type: String },
   hasScholarShip: { type: Boolean, default: false },
-   hasFinancialPlan: { type: Boolean, default: false },
+  hasFinancialPlan: { type: Boolean, default: false },
+   tuitionFeeId: {
+  type: Schema.Types.ObjectId,
+  ref: "TuitionFee",
+  required: true
+}
+
 });
 
 export const EnrollmentModel = model<IEnrollment>(

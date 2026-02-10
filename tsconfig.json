@@ -16,5 +16,14 @@
   ],
   "exclude": [
     "node_modules"
-  ]
+  ],
+  "baseUrl": ".",
+  "paths": {
+    "*": ["src/*"],
+    "models": ["src/models/*"],
+    "controllers": ["src/controllers/*"],
+    "utils": ["src/utils/*"],
+    "middlewares": ["src/middlewares/*"],
+    "routes": ["src/routes/*"]
+  }
 }

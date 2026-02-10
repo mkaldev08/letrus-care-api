@@ -6,12 +6,21 @@ import { sendSMSVerification } from "./otp-controller";
 import { OTPModel } from "../models/otp-model";
 
 export const createUser = async (request: Request, response: Response) => {
-  const { username, password, role, phoneNumber }: IUser = request.body;
+  const {
+    username,
+    password,
+    role,
+    phoneNumber,
+    permissions,
+    parentIdentityNumber,
+  }: IUser = request.body;
   const user: IUser = new UserModel({
     username: username.toLowerCase(),
     password,
     role,
     phoneNumber,
+    permissions,
+    parentIdentityNumber,
   });
   try {
     await user.save();
@@ -30,7 +39,7 @@ type cookieOptionsType = {
 const cookieOptions: cookieOptionsType = {
   httpOnly: true,
   secure: Boolean(process.env.SECURE_ON_COOKIE as string), // true em "production"
-  sameSite: (process.env.SAME_SITE as cookieOptionsType["sameSite"]),
+  sameSite: process.env.SAME_SITE as cookieOptionsType["sameSite"],
 };
 
 export const loginAccount = async (request: Request, response: Response) => {
@@ -39,11 +48,15 @@ export const loginAccount = async (request: Request, response: Response) => {
     let user: IUser | null = await UserModel.findOne({ username });
 
     if (!user) {
-      response.status(401).json({ error: "Verifica os dados de acesso, tente novamente!" });
+      response
+        .status(401)
+        .json({ error: "Verifica os dados de acesso, tente novamente!" });
     } else {
       const same = await isCorrectHashedData(password, user.password);
       if (!same) {
-        response.status(401).json({ error: "Verifica os dados de acesso, tente novamente!" });
+        response
+          .status(401)
+          .json({ error: "Verifica os dados de acesso, tente novamente!" });
       } else {
         const secret = process.env.JWT_TOKEN;
         if (!secret) {
@@ -138,11 +151,17 @@ export const verifyOTPCode = async (request: Request, response: Response) => {
 export const updateUser = async (request: Request, response: Response) => {
   try {
     const { id } = request.params;
-    const { username, password, role }: IUser = request.body;
+    const {
+      username,
+      password,
+      role,
+      permissions,
+      parentIdentityNumber,
+    }: IUser = request.body;
     await UserModel.findOneAndUpdate(
       { _id: id },
-      { $set: { username, password, role } },
-      { $upsert: true, new: true }
+      { $set: { username, password, role, permissions, parentIdentityNumber } },
+      { $upsert: true, new: true },
     );
   } catch (error) {
     console.log(error);
@@ -154,7 +173,7 @@ export const updateUser = async (request: Request, response: Response) => {
 
 const isCorrectHashedData = async function (
   requested: string,
-  target: string
+  target: string,
 ): Promise<boolean> {
   try {
     const same = await bcrypt.compare(requested, target);

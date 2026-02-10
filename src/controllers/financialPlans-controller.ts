@@ -41,6 +41,7 @@ export async function generateFinancialPlan(
       throw new Error("Curso não encontrado.");
     }
     const tuitionFeeMatched = await TuitionFeeModel.findOne({ courseId: courseMatched._id });
+
     if (!tuitionFeeMatched) {
       throw new Error("Taxa de matrícula não encontrada.");
     }

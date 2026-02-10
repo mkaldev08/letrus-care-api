@@ -4,8 +4,10 @@ import { createCode } from "../utils/generate-code";
 import { IEnrollmentReceipt, ReceiptModel } from "../models/enrollment_receipt";
 import { StudentModel } from "../models/student-model";
 import { generateFinancialPlan } from "./financialPlans-controller";
-import { TuitionFeeModel } from "../models/tuition-fee-model";
-import { Schema } from "mongoose";
+import { ITuitionFee, TuitionFeeModel } from "../models/tuition-fee-model";
+import mongoose from "mongoose";
+import { IClass } from "../models/class-model";
+import { ICourse } from "../models/course-model";
 
 export const createEnrollment = async (
   request: Request,
@@ -39,23 +41,39 @@ export const createEnrollment = async (
       receiptNumber: receiptCode + partCode.slice(0, 3),
     });
 
-    const enrollmentPopulated = await enrollment.populate({
+    const enrollmentPrePopulated = await enrollment.populate({
       path: "classId",
       populate: [{ path: "course" }, { path: "grade", select: "grade" }],
     });
 
-        const tuitionFee = await TuitionFeeModel.findOne(
-      { courseId: enrollmentPopulated.toObject().classId.course._id }
+    const tuitionFee = await TuitionFeeModel.findOne({
+      courseId: enrollmentPrePopulated.toObject().classId.course?._id,
+      createdAt: { $lte: enrollment.enrollmentDate },
+    }).sort({ createdAt: -1 });
+
+    if (!tuitionFee) {
+      response.status(409).json({
+        message:
+          "Taxa de matrícula histórico não encontrado para este enrollment",
+      });
+      return;
+    }
+
+    enrollment.tuitionFeeId = new mongoose.Types.ObjectId(
+      String(tuitionFee._id)
     );
-    enrollment.tuitionFeeId = new Schema.Types.ObjectId(String(tuitionFee?._id));
     await enrollment.save();
+
+    const enrollmentPopulated = await enrollmentPrePopulated.populate(
+      "tuitionFeeId"
+    );
 
     await generateFinancialPlan(centerId, enrollment._id as string);
 
     await receipt.save();
     response.status(201).json({ receipt, enrollment: enrollmentPopulated });
   } catch (error) {
-    console.log(error);
+    process.env.NODE_ENV === "development" && console.log(error);
     response.status(500).json(error);
   }
 };
@@ -97,6 +115,7 @@ export const getEnrollments = async (request: Request, response: Response) => {
         })
       : response.status(404).json(null);
   } catch (error) {
+    process.env.NODE_ENV === "development" && console.log(error);
     response.status(500).json(error);
   }
 };
@@ -125,9 +144,12 @@ export const getStudentsForAddOnClass = async (
       .sort({
         enrollmentDate: -1,
       });
-    enrollments.length !== 0
-      ? response.status(200).json(enrollments)
-      : response.status(404).json(null);
+
+    if (!enrollments || enrollments.length === 0) {
+      response.status(404).json(null);
+    }
+
+    response.status(200).json(enrollments);
   } catch (error) {
     response.status(500).json(error);
   }
@@ -143,33 +165,98 @@ export const getEnrollment = async (request: Request, response: Response) => {
         populate: [
           { path: "course", select: "name" },
           { path: "grade", select: "grade" },
-          {path:"tuitionFeeId" , select: "fee confirmationEnrollmentFee enrollmentFee" }
         ],
       })
       .populate("userId");
-    enrollment;
+
+    if (!enrollment) {
+      response.status(404).json(null);
+      return;
+    }
+
+    if (enrollment?.tuitionFeeId) {
+      await enrollment.populate({
+        path: "tuitionFeeId",
+        select: "fee confirmationEnrollmentFee enrollmentFee",
+      });
+    } else {
+      const classObj = enrollment.classId as unknown as IClass;
+      const courseObj = classObj.course as unknown as ICourse;
+
+      const tuitionFee = await TuitionFeeModel.findOne({
+        courseId: courseObj._id,
+        createdAt: { $lte: enrollment.enrollmentDate },
+      }).sort({ createdAt: -1 });
+
+      if (!tuitionFee) {
+        response.status(409).json({
+          message: "TuitionFee histórico não encontrado para este enrollment",
+        });
+        return;
+      }
+
+      enrollment.tuitionFeeId = new mongoose.Types.ObjectId(
+        String(tuitionFee?._id)
+      );
+      await enrollment.save();
+    }
+
     const receipt = await ReceiptModel.findOne({ enrollmentId: id });
-    enrollment
-      ? response.status(200).json({ enrollment, receipt })
-      : response.status(404).json(null);
+    response.status(200).json({ enrollment, receipt });
   } catch (error) {
     response.status(500).json(error);
   }
 };
+
+//TODO: pensar em entregar todas isncrições de um estudante ativas e deixar o front decidir qual quer exibir
 export const getEnrollmentByStudentId = async (
   request: Request,
   response: Response
 ) => {
   const { studentId } = request.params;
   try {
-    const enrollment = await EnrollmentModel.findOne({ studentId }).populate({
-      path: "classId",
-      populate: [{ path: "course" }, { path: "grade", select: "grade" }],
-    });
-    enrollment
-      ? response.status(200).json(enrollment)
-      : response.status(404).json(null);
+    const enrollment = await EnrollmentModel.findOne({ studentId })
+      .populate({
+        path: "classId",
+        populate: [{ path: "course" }, { path: "grade", select: "grade" }],
+      })
+      .sort({ enrollmentDate: -1 });
+
+    if (!enrollment) {
+      response.status(404).json(null);
+      return;
+    }
+
+    if (enrollment?.tuitionFeeId) {
+      await enrollment.populate({
+        path: "tuitionFeeId",
+        select: "fee confirmationEnrollmentFee enrollmentFee fine",
+      });
+    } else {
+      const classObj = enrollment.classId as unknown as IClass;
+      const courseObj = classObj.course as unknown as ICourse;
+
+      const tuitionFee = await TuitionFeeModel.findOne({
+        courseId: courseObj._id,
+        createdAt: { $lte: enrollment.enrollmentDate },
+      }).sort({ createdAt: -1 });
+
+      if (!tuitionFee) {
+        response.status(409).json({
+          message: "TuitionFee histórico não encontrado para este enrollment",
+        });
+        return;
+      }
+
+      enrollment.tuitionFeeId = new mongoose.Types.ObjectId(
+        String(tuitionFee?._id)
+      );
+
+      await enrollment.save();
+    }
+    response.status(200).json(enrollment);
   } catch (error) {
+    process.env.NODE_ENV === "development" && console.log(error);
     response.status(500).json(error);
   }
 };
@@ -286,3 +373,43 @@ export const searchEnrollments = async (
       .json({ message: "Erro ao pesquisar por inscricoes", error });
   }
 };
+
+export const getEnrollmentFinancialContext = async (
+  request: Request,
+  response: Response
+) => {
+  const { id } = request.params;
+
+  const enrollment = await EnrollmentModel
+    .findById(id)
+    .populate("tuitionFeeId");
+
+  if (!enrollment || !enrollment.tuitionFeeId) {
+    response.status(404).json(null);
+    return;
+  }
+
+  const hasPreviousEnrollment = await EnrollmentModel.exists({
+    studentId: enrollment.studentId,
+    centerId: enrollment.centerId,
+    enrollmentDate: { $lt: enrollment.enrollmentDate },
+  });
+
+  const tuitionFee = enrollment.tuitionFeeId as unknown as ITuitionFee;
+
+  if (!hasPreviousEnrollment) {
+    response.json({
+      type: "enrollment",
+      label: "Taxa de Inscrição",
+      amount: tuitionFee.enrollmentFee,
+    });
+    return;
+  }
+
+  response.json({
+    type: "confirmation",
+    label: "Taxa de Confirmação",
+    amount: tuitionFee.confirmationEnrollmentFee,
+  });
+};
+

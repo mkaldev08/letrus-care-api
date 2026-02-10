@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import mongoose from "mongoose";
 import { CourseModel } from "../models/course-model";
 import { TuitionFeeModel } from "../models/tuition-fee-model";
 
@@ -18,9 +17,6 @@ export const createCourse = async (request: Request, response: Response) => {
     confirmationEnrollmentFee,
   } = request.body;
 
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
     const course = new CourseModel({
       name,
@@ -32,7 +28,7 @@ export const createCourse = async (request: Request, response: Response) => {
       courseType,
     });
 
-    await course.save({ session });
+    await course.save();
 
     const tuitionFee = new TuitionFeeModel({
       courseId: course._id,
@@ -43,10 +39,7 @@ export const createCourse = async (request: Request, response: Response) => {
       status: "active",
     });
 
-    await tuitionFee.save({ session });
-
-    await session.commitTransaction();
-    session.endSession();
+    await tuitionFee.save();
 
     const feeData = await TuitionFeeModel.findOne({
       courseId: course._id,
@@ -58,8 +51,6 @@ export const createCourse = async (request: Request, response: Response) => {
       ...(feeData?.toObject() ?? {}),
     });
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
     response.status(500).json(error);
   }
 };
@@ -168,17 +159,11 @@ export const getInactiveCourses = async (
   request: Request,
   response: Response
 ) => {
-  const session = await mongoose.startSession();
-
   try {
-    session.startTransaction();
-
     const courses = await CourseModel.find({ status: "inactive" })
-      .sort({ name: 1 })
-      .session(session);
+      .sort({ name: 1 });
 
     if (!courses.length) {
-      await session.commitTransaction();
       response.status(404).json(null);
       return;
     }
@@ -186,13 +171,11 @@ export const getInactiveCourses = async (
     const tuitionFees = await TuitionFeeModel.find({
       courseId: { $in: courses.map((course) => course._id) },
       status: "inactive",
-    }).session(session);
+    });
 
     const feeMap = new Map(
       tuitionFees.map((fee) => [String(fee.courseId), fee.toObject()])
     );
-
-    await session.commitTransaction();
 
     response.status(200).json(
       courses.map((course) => ({
@@ -201,10 +184,7 @@ export const getInactiveCourses = async (
       }))
     );
   } catch (error) {
-    await session.abortTransaction();
     response.status(500).json(error);
-  } finally {
-    session.endSession();
   }
 };
 
@@ -222,9 +202,6 @@ export const editCourse = async (request: Request, response: Response) => {
     confirmationEnrollmentFee,
   } = request.body;
 
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
     const course = await CourseModel.findByIdAndUpdate(
       id,
@@ -235,20 +212,17 @@ export const editCourse = async (request: Request, response: Response) => {
         endDate,
         courseType,
       },
-      { new: true, session }
+      { new: true }
     );
 
     if (!course) {
-      await session.abortTransaction();
-      session.endSession();
       response.status(404).json(null);
       return;
     }
 
     await TuitionFeeModel.updateOne(
       { courseId: id, status: "active" },
-      { $set: { status: "inactive" } },
-      { session }
+      { $set: { status: "inactive" } }
     );
 
     const tuitionFee = new TuitionFeeModel({
@@ -260,10 +234,7 @@ export const editCourse = async (request: Request, response: Response) => {
       status: "active",
     });
 
-    await tuitionFee.save({ session });
-
-    await session.commitTransaction();
-    session.endSession();
+    await tuitionFee.save();
 
     const feeData = await TuitionFeeModel.findOne({
       courseId: id,
@@ -275,8 +246,6 @@ export const editCourse = async (request: Request, response: Response) => {
       ...(feeData?.toObject() ?? {}),
     });
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
     response.status(500).json(error);
   }
 };

@@ -41,6 +41,7 @@ export async function generateFinancialPlan(
       throw new Error("Curso não encontrado.");
     }
     const tuitionFeeMatched = await TuitionFeeModel.findOne({ courseId: courseMatched._id });
+
     if (!tuitionFeeMatched) {
       throw new Error("Taxa de matrícula não encontrada.");
     }
@@ -51,6 +52,8 @@ export async function generateFinancialPlan(
         : enrollment.enrollmentDate,
       schoolYear.endDate
     );
+
+    console.log("months expected: ", months)
     for (const resultMonth of months) {
       const dueDate = new Date(resultMonth.year, resultMonth.monthInNumber, 10);
 

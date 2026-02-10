@@ -22,6 +22,7 @@ export const createPayment = async (request: Request, response: Response) => {
 
   // Verificação dos campos obrigatórios
   if (!enrollmentId || !amount || !centerId) {
+    process.env.NODE_ENV  ==="development" && console.log(`Recebidos: ${enrollmentId},   ${amount},   ${centerId}`);
     response.status(400).json({ error: "Campos obrigatórios faltando" });
     return;
   }
@@ -45,7 +46,7 @@ export const createPayment = async (request: Request, response: Response) => {
       receiptNumber: receiptCode + partCode.slice(0, 3),
     });
 
-    //actualiza o plano financeiro depois de pagar e ter o recibo
+    //atualiza o plano financeiro depois de pagar e ter o recibo
     await updateFinancialPlanStatus("paid", payment._id as string, {
       monthReference: paymentMonthReference,
       enrollmentId: String(enrollmentId),
@@ -127,7 +128,7 @@ export const getPayments = async (request: Request, response: Response) => {
       totalPayments: Math.ceil(totalPayments / limit),
     });
   } catch (error) {
-    console.error(error);
+    process.env.NODE_ENV === "development" && console.error(error);
     response.status(500).json(error);
   }
 };
@@ -199,6 +200,7 @@ export const getPayment = async (request: Request, response: Response) => {
       }, receipt
     });
   } catch (error) {
+    process.env.NODE_ENV === "development" && console.error(error); 
     response.status(500).json(error);
   }
 };
@@ -227,6 +229,7 @@ export const editPayment = async (request: Request, response: Response) => {
       ? response.status(200).json(payment)
       : response.status(404).json(null);
   } catch (error) {
+    process.env.NODE_ENV === "development" && console.error(error);
     response.status(500).json(error);
   }
 };
@@ -255,7 +258,7 @@ export const updatePaymentStatus = async (
 
     response.status(200).json(payment);
   } catch (error) {
-    console.error("Erro ao atualizar o status do pagamento:", error);
+    process.env.NODE_ENV === "development" && console.error("Erro ao atualizar o status do pagamento:", error);
     response.status(500).json({ error: "Erro interno do servidor" });
   }
 };
@@ -325,6 +328,7 @@ export const searchPayments = async (request: Request, response: Response) => {
       })
       : response.status(404).json(null);
   } catch (error) {
+    process.env.NODE_ENV === "development" && console.error("Erro ao buscar pagamentos:", error);
     response.status(500).json({ message: "Erro ao buscar pagamentos", error });
   }
 };

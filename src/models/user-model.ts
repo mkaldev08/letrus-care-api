@@ -5,7 +5,9 @@ export interface IUser extends Document {
   username: string;
   password: string;
   phoneNumber: string;
-  role: "admin" | "teacher" | "student";
+  role: "admin" | "teacher" | "studentParent";
+  permissions?: string[];
+  parentIdentityNumber?: string;
   //TODO: adicionar o employer no perfil
   createdAt: Date;
   updatedAt: Date;
@@ -17,9 +19,11 @@ const userSchema = new Schema<IUser>({
   phoneNumber: { type: String, required: true, minLength: 9, unique: true },
   role: {
     type: String,
-    enum: ["admin", "teacher", "student"],
+    enum: ["admin", "teacher", "studentParent"],
     default: "admin",
   },
+  permissions: { type: [String], default: [] },
+  parentIdentityNumber: { type: String },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

@@ -51,7 +51,6 @@ export async function generateFinancialPlan(
         : enrollment.enrollmentDate,
       schoolYear.endDate
     );
-    console.log(months);
 
     for (const resultMonth of months) {
       const dueDate = new Date(resultMonth.year, resultMonth.monthInNumber, 10);
@@ -89,7 +88,7 @@ export async function getFinancialPlan(request: Request, response: Response) {
       schoolYear,
       centerId,
       enrollmentId,
-    }).populate("linkedPayment");
+    }).populate("linkedPayment").sort({ year: 1, month: 1 });
     response.status(200).json(result);
   } catch (error) {
     response.status(500).json({ message: "Erro inesperado" });

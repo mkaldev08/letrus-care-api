@@ -255,3 +255,508 @@ export const getOverduePaymentsWithoutLimitePerPage = async (
     }
   }
 };
+
+// Get daily payments with pagination
+export const getDailyPayments = async (
+  request: Request,
+  response: Response
+) => {
+  try {
+    const { centerId, schoolYearId } = request.params;
+    const page = parseInt(request.query.page as string) || 1;
+    const limit =
+      parseInt(request.query.limit as string) ||
+      parseInt(process.env.queryLimit as string) ||
+      10;
+    const skip = (page - 1) * limit;
+
+    const today = new Date();
+    const startOfDay = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      0,
+      0,
+      0
+    );
+    const endOfDay = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      23,
+      59,
+      59
+    );
+
+    const dailyPayments = await PaymentModel.find({
+      centerId,
+      status: { $eq: "paid" },
+      paymentDate: { $gte: startOfDay, $lt: endOfDay },
+    })
+      .populate({
+        path: "enrollmentId",
+        select: "classId studentId",
+        populate: [
+          { path: "classId", select: "className" },
+          { path: "studentId", select: "name studentCode" },
+        ],
+      })
+      .skip(skip)
+      .limit(limit)
+      .sort({ paymentDate: -1 });
+
+    const total = await PaymentModel.countDocuments({
+      centerId,
+      status: { $eq: "paid" },
+      paymentDate: { $gte: startOfDay, $lt: endOfDay },
+    });
+
+    response.status(200).json({
+      dailyPayments,
+      total: Math.ceil(total / limit),
+    });
+  } catch (error) {
+    if (process.env.NODE_ENV === "development") console.error(error);
+    if (error instanceof Error) {
+      response.status(500).json({ message: error.message });
+    } else {
+      response.status(500).json({ message: "Internal server error" });
+    }
+  }
+};
+
+// Get daily payments without limit (for PDF export)
+export const getDailyPaymentsWithoutLimit = async (
+  request: Request,
+  response: Response
+) => {
+  try {
+    const { centerId, schoolYearId } = request.params;
+
+    const today = new Date();
+    const startOfDay = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      0,
+      0,
+      0
+    );
+    const endOfDay = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      23,
+      59,
+      59
+    );
+
+    const dailyPayments = await PaymentModel.find({
+      centerId,
+      status: { $eq: "paid" },
+      paymentDate: { $gte: startOfDay, $lt: endOfDay },
+    })
+      .populate({
+        path: "enrollmentId",
+        select: "classId studentId",
+        populate: [
+          { path: "classId", select: "className" },
+          { path: "studentId", select: "name studentCode" },
+        ],
+      })
+      .sort({ paymentDate: -1 });
+
+    response.status(200).json(dailyPayments);
+  } catch (error) {
+    if (process.env.NODE_ENV === "development") console.error(error);
+    if (error instanceof Error) {
+      response.status(500).json({ message: error.message });
+    } else {
+      response.status(500).json({ message: "Internal server error" });
+    }
+  }
+};
+
+// Get active students with pagination
+export const getActiveStudents = async (
+  request: Request,
+  response: Response
+) => {
+  try {
+    const { centerId } = request.params;
+    const page = parseInt(request.query.page as string) || 1;
+    const limit =
+      parseInt(request.query.limit as string) ||
+      parseInt(process.env.queryLimit as string) ||
+      10;
+    const skip = (page - 1) * limit;
+
+    const students = await StudentModel.find({
+      centerId,
+      status: { $ne: "inactive" },
+    })
+      .skip(skip)
+      .limit(limit)
+      .sort({ studentCode: 1 });
+
+    const total = await StudentModel.countDocuments({
+      centerId,
+      status: { $ne: "inactive" },
+    });
+
+    response.status(200).json({
+      students,
+      total: Math.ceil(total / limit),
+    });
+  } catch (error) {
+    if (process.env.NODE_ENV === "development") console.error(error);
+    if (error instanceof Error) {
+      response.status(500).json({ message: error.message });
+    } else {
+      response.status(500).json({ message: "Internal server error" });
+    }
+  }
+};
+
+// Get active students without limit (for PDF export)
+export const getActiveStudentsWithoutLimit = async (
+  request: Request,
+  response: Response
+) => {
+  try {
+    const { centerId } = request.params;
+
+    const students = await StudentModel.find({
+      centerId,
+      status: { $ne: "inactive" },
+    }).sort({ studentCode: 1 });
+
+    response.status(200).json(students);
+  } catch (error) {
+    if (process.env.NODE_ENV === "development") console.error(error);
+    if (error instanceof Error) {
+      response.status(500).json({ message: error.message });
+    } else {
+      response.status(500).json({ message: "Internal server error" });
+    }
+  }
+};
+
+// Get daily absences with pagination
+export const getDailyAbsences = async (
+  request: Request,
+  response: Response
+) => {
+  try {
+    const { centerId, schoolYearId } = request.params;
+    const page = parseInt(request.query.page as string) || 1;
+    const limit =
+      parseInt(request.query.limit as string) ||
+      parseInt(process.env.queryLimit as string) ||
+      10;
+    const skip = (page - 1) * limit;
+
+    const today = new Date();
+    const startOfDay = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      0,
+      0,
+      0
+    );
+    const endOfDay = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      23,
+      59,
+      59
+    );
+
+    // Get class IDs for the school year
+    const classIds = await ClassModel.find({
+      center: centerId,
+      schoolYear: schoolYearId,
+    }).distinct("_id");
+
+    const absences = classIds.length
+      ? await AttendanceModel.find({
+          classId: { $in: classIds },
+          status: "absent",
+          date: { $gte: startOfDay, $lt: endOfDay },
+        })
+          .populate({
+            path: "enrollmentId",
+            select: "classId studentId",
+            populate: [
+              { path: "classId", select: "className" },
+              { path: "studentId", select: "name studentCode" },
+            ],
+          })
+          .skip(skip)
+          .limit(limit)
+          .sort({ date: -1 })
+      : [];
+
+    const total = classIds.length
+      ? await AttendanceModel.countDocuments({
+          classId: { $in: classIds },
+          status: "absent",
+          date: { $gte: startOfDay, $lt: endOfDay },
+        })
+      : 0;
+
+    response.status(200).json({
+      absences,
+      total: Math.ceil(total / limit),
+    });
+  } catch (error) {
+    if (process.env.NODE_ENV === "development") console.error(error);
+    if (error instanceof Error) {
+      response.status(500).json({ message: error.message });
+    } else {
+      response.status(500).json({ message: "Internal server error" });
+    }
+  }
+};
+
+// Get daily absences without limit (for PDF export)
+export const getDailyAbsencesWithoutLimit = async (
+  request: Request,
+  response: Response
+) => {
+  try {
+    const { centerId, schoolYearId } = request.params;
+
+    const today = new Date();
+    const startOfDay = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      0,
+      0,
+      0
+    );
+    const endOfDay = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      23,
+      59,
+      59
+    );
+
+    // Get class IDs for the school year
+    const classIds = await ClassModel.find({
+      center: centerId,
+      schoolYear: schoolYearId,
+    }).distinct("_id");
+
+    const absences = classIds.length
+      ? await AttendanceModel.find({
+          classId: { $in: classIds },
+          status: "absent",
+          date: { $gte: startOfDay, $lt: endOfDay },
+        })
+          .populate({
+            path: "enrollmentId",
+            select: "classId studentId",
+            populate: [
+              { path: "classId", select: "className" },
+              { path: "studentId", select: "name studentCode" },
+            ],
+          })
+          .sort({ date: -1 })
+      : [];
+
+    response.status(200).json(absences);
+  } catch (error) {
+    if (process.env.NODE_ENV === "development") console.error(error);
+    if (error instanceof Error) {
+      response.status(500).json({ message: error.message });
+    } else {
+      response.status(500).json({ message: "Internal server error" });
+    }
+  }
+};
+
+// Get daily enrollments with pagination
+export const getDailyEnrollments = async (
+  request: Request,
+  response: Response
+) => {
+  try {
+    const { centerId, schoolYearId } = request.params;
+    const page = parseInt(request.query.page as string) || 1;
+    const limit =
+      parseInt(request.query.limit as string) ||
+      parseInt(process.env.queryLimit as string) ||
+      10;
+    const skip = (page - 1) * limit;
+
+    const today = new Date();
+    const startOfDay = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      0,
+      0,
+      0
+    );
+    const endOfDay = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      23,
+      59,
+      59
+    );
+
+    const enrollments = await EnrollmentModel.find({
+      centerId,
+      status: { $ne: "dropped" },
+      enrollmentDate: { $gte: startOfDay, $lt: endOfDay },
+    })
+      .populate("classId", "className")
+      .populate("studentId", "name studentCode")
+      .skip(skip)
+      .limit(limit)
+      .sort({ enrollmentDate: -1 });
+
+    const total = await EnrollmentModel.countDocuments({
+      centerId,
+      status: { $ne: "dropped" },
+      enrollmentDate: { $gte: startOfDay, $lt: endOfDay },
+    });
+
+    response.status(200).json({
+      enrollments,
+      total: Math.ceil(total / limit),
+    });
+  } catch (error) {
+    if (process.env.NODE_ENV === "development") console.error(error);
+    if (error instanceof Error) {
+      response.status(500).json({ message: error.message });
+    } else {
+      response.status(500).json({ message: "Internal server error" });
+    }
+  }
+};
+
+// Get daily enrollments without limit (for PDF export)
+export const getDailyEnrollmentsWithoutLimit = async (
+  request: Request,
+  response: Response
+) => {
+  try {
+    const { centerId, schoolYearId } = request.params;
+
+    const today = new Date();
+    const startOfDay = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      0,
+      0,
+      0
+    );
+    const endOfDay = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      23,
+      59,
+      59
+    );
+
+    const enrollments = await EnrollmentModel.find({
+      centerId,
+      status: { $ne: "dropped" },
+      enrollmentDate: { $gte: startOfDay, $lt: endOfDay },
+    })
+      .populate("classId", "className")
+      .populate("studentId", "name studentCode")
+      .sort({ enrollmentDate: -1 });
+
+    response.status(200).json(enrollments);
+  } catch (error) {
+    if (process.env.NODE_ENV === "development") console.error(error);
+    if (error instanceof Error) {
+      response.status(500).json({ message: error.message });
+    } else {
+      response.status(500).json({ message: "Internal server error" });
+    }
+  }
+};
+
+// Get incomplete enrollments with pagination
+export const getIncompleteEnrollments = async (
+  request: Request,
+  response: Response
+) => {
+  try {
+    const { centerId, schoolYearId } = request.params;
+    const page = parseInt(request.query.page as string) || 1;
+    const limit =
+      parseInt(request.query.limit as string) ||
+      parseInt(process.env.queryLimit as string) ||
+      10;
+    const skip = (page - 1) * limit;
+
+    const enrollments = await EnrollmentModel.find({
+      centerId,
+      status: { $eq: "enrolled" },
+    })
+      .populate("classId", "className")
+      .populate("studentId", "name studentCode")
+      .skip(skip)
+      .limit(limit)
+      .sort({ enrollmentDate: -1 });
+
+    const total = await EnrollmentModel.countDocuments({
+      centerId,
+      status: { $eq: "enrolled" },
+    });
+
+    response.status(200).json({
+      enrollments,
+      total: Math.ceil(total / limit),
+    });
+  } catch (error) {
+    if (process.env.NODE_ENV === "development") console.error(error);
+    if (error instanceof Error) {
+      response.status(500).json({ message: error.message });
+    } else {
+      response.status(500).json({ message: "Internal server error" });
+    }
+  }
+};
+
+// Get incomplete enrollments without limit (for PDF export)
+export const getIncompleteEnrollmentsWithoutLimit = async (
+  request: Request,
+  response: Response
+) => {
+  try {
+    const { centerId, schoolYearId } = request.params;
+
+    const enrollments = await EnrollmentModel.find({
+      centerId,
+      status: { $eq: "enrolled" },
+    })
+      .populate("classId", "className")
+      .populate("studentId", "name studentCode")
+      .sort({ enrollmentDate: -1 });
+
+    response.status(200).json(enrollments);
+  } catch (error) {
+    if (process.env.NODE_ENV === "development") console.error(error);
+    if (error instanceof Error) {
+      response.status(500).json({ message: error.message });
+    } else {
+      response.status(500).json({ message: "Internal server error" });
+    }
+  }
+};
+

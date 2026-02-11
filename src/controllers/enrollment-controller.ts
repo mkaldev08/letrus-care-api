@@ -208,7 +208,7 @@ export const getEnrollment = async (request: Request, response: Response) => {
   }
 };
 
-//TODO: pensar em entregar todas isncrições de um estudante ativas e deixar o front decidir qual quer exibir
+//TODO: pensar em entregar todas inscrições de um estudante ativas e deixar o front decidir qual quer exibir
 export const getEnrollmentByStudentId = async (
   request: Request,
   response: Response
@@ -230,7 +230,7 @@ export const getEnrollmentByStudentId = async (
     if (enrollment?.tuitionFeeId) {
       await enrollment.populate({
         path: "tuitionFeeId",
-        select: "fee confirmationEnrollmentFee enrollmentFee fine",
+        select: "fee confirmationEnrollmentFee enrollmentFee feeFine",
       });
     } else {
       const classObj = enrollment.classId as unknown as IClass;

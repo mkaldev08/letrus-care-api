@@ -397,12 +397,14 @@ export const getActiveStudents = async (
     })
       .skip(skip)
       .limit(limit)
-      .sort({ studentCode: 1 });
+      .sort({ "name.fullName": 1 });
 
     const total = await StudentModel.countDocuments({
       centerId,
       status: { $ne: "inactive" },
     });
+
+    console.log(students)
 
     response.status(200).json({
       students,
@@ -429,7 +431,7 @@ export const getActiveStudentsWithoutLimit = async (
     const students = await StudentModel.find({
       centerId,
       status: { $ne: "inactive" },
-    }).sort({ studentCode: 1 });
+    }).sort({ "name.fullName": 1 });
 
     response.status(200).json(students);
   } catch (error) {

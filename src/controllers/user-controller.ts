@@ -62,7 +62,8 @@ export const loginAccount = async (request: Request, response: Response) => {
         if (!secret) {
           return;
         }
-        const token = jwt.sign({ username }, secret, { expiresIn: 1000 * 60 * 30 }); // Token expira em 30 minutos
+        const TOKEN_EXPIRATION_TIME_MS = 1000 * 60 * 30; // 30 minutos em milissegundos  
+        const token = jwt.sign({ username }, secret, { expiresIn: TOKEN_EXPIRATION_TIME_MS }); 
 
         response.cookie("token", token, cookieOptions);
 

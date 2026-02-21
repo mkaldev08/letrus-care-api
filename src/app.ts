@@ -27,7 +27,7 @@ import { healthCheckRouter } from "./routes/health-check-router";
 
 const app: Application = express();
 
-app.use(cors({ credentials: true, origin: String(process.env.APP_URL) }));
+app.use(cors({ credentials: true, origin: '*' }));
 
 app.use(logger("dev"));
 app.use(express.json());
